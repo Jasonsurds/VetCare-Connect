@@ -1,0 +1,120 @@
+@model IEnumerable<VetCare.Models.CrmRecord>
+@{
+    Layout = "_DashboardLayout";
+    var isAdmin = User.GetUserRole() == "Administrator";
+    var leaderboard = ViewBag.Leaderboard as IEnumerable<VetCare.Controllers.LoyaltyLeaderboardRow> ?? Enumerable.Empty<VetCare.Controllers.LoyaltyLeaderboardRow>();
+}
+
+<div class="filter-row">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control-vc" placeholder="Search owner or interaction..." />
+        </div>
+        <button class="btn-vc-outline" type="submit">Search</button>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+        {
+            <a class="btn-vc-outline" asp-action="Index">Clear</a>
+        }
+    </form>
+    <a class="btn-vc ms-auto" asp-action="Create">+ Log interaction</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Interaction history (@Model.Count())</h3>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.Any())
+                {
+                    <table class="vc-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Owner</th>
+                                <th>Interaction / Feedback</th>
+                                <th>Points</th>
+                                @if (isAdmin)
+                                {
+                                    <th style="text-align:right;"></th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="cell-muted">@c.InteractionDate.ToString("MMM dd, yyyy")</td>
+                                <td class="cell-strong">@c.Owner?.Name</td>
+                                <td style="max-width:340px;">
+                                    @if (!string.IsNullOrEmpty(c.Interaction))
+                                    {
+                                        <div>@c.Interaction</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(c.Feedback))
+                                    {
+                                        <div class="cell-muted">“@c.Feedback”</div>
+                                    }
+                                </td>
+                                <td><span class="badge-vc b-info">@c.LoyaltyPoints</span></td>
+                                @if (isAdmin)
+                                {
+                                    <td style="text-align:right;">
+                                        <form asp-action="Delete" method="post" data-confirm="Delete this CRM record?">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@c.CRMID" />
+                                            <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
+                                        </form>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No CRM interactions logged yet.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">⭐ Loyalty leaderboard</h3></div>
+            <div class="vc-card-body p-0">
+                @if (leaderboard.Any())
+                {
+                    <table class="vc-table">
+                        <tbody>
+                        @foreach (var (row, idx) in leaderboard.Select((r, i) => (r, i)))
+                        {
+                            <tr>
+                                <td style="width:40px;">
+                                    <span class="badge-vc @(idx == 0 ? "b-pending" : "b-neutral")">#@string.Concat(idx + 1)</span>
+                                </td>
+                                <td class="cell-strong">@row.OwnerName</td>
+                                <td style="text-align:right;" class="cell-strong">@row.Points pts</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No loyalty points awarded yet.</p></div>
+                }
+            </div>
+        </div>
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">Loyalty policy</h3></div>
+            <div class="vc-card-body">
+                <p class="page-note mb-2">• <span class="cell-strong">1 point per ₱100</span> is awarded automatically when an invoice is paid.</p>
+                <p class="page-note mb-0">• Staff can grant bonus points from <a asp-action="Create" class="text-teal">Log interaction</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>

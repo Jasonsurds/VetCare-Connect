@@ -1,0 +1,92 @@
+@model IEnumerable<VetCare.Models.VaccinationReminder>
+@{
+    Layout = "_DashboardLayout";
+    var canManage = User.GetUserRole() is "Administrator" or "Clinic Staff" or "Veterinarian";
+    var today = DateTime.Today;
+}
+
+@if (canManage)
+{
+    <div class="filter-row">
+        <p class="page-note mb-0">Track upcoming vaccinations and notify pet owners.</p>
+        <a class="btn-vc ms-auto" asp-action="Create">+ Set reminder</a>
+    </div>
+}
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">Reminders (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Pet</th>
+                        <th>Vaccine</th>
+                        <th>Due date</th>
+                        <th>Countdown</th>
+                        <th>Status</th>
+                        @if (canManage)
+                        {
+                            <th style="text-align:right;">Actions</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    var days = (r.DueDate.Date - today).Days;
+                    <tr>
+                        <td class="cell-strong">@r.Pet?.PetName <span class="cell-muted">(@r.Pet?.Species)</span></td>
+                        <td>@r.VaccineName</td>
+                        <td>@r.DueDate.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            @if (r.Status == "Sent")
+                            {
+                                <span class="cell-muted">—</span>
+                            }
+                            else if (days < 0)
+                            {
+                                <span class="badge-vc b-low">@(-days) day(s) overdue</span>
+                            }
+                            else if (days <= 7)
+                            {
+                                <span class="badge-vc b-pending">in @days day(s)</span>
+                            }
+                            else
+                            {
+                                <span class="cell-muted">in @days days</span>
+                            }
+                        </td>
+                        <td><partial name="_StatusBadge" model="r.Status" /></td>
+                        @if (canManage)
+                        {
+                            <td style="text-align:right; white-space:nowrap;">
+                                @if (r.Status == "Pending")
+                                {
+                                    <form asp-action="MarkSent" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.ReminderID" />
+                                        <button class="btn-vc btn-vc-sm" type="submit">Notify owner</button>
+                                    </form>
+                                }
+                                <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@r.ReminderID">Edit</a>
+                                <form asp-action="Delete" method="post" class="d-inline" data-confirm="Delete this reminder?">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No vaccination reminders @(canManage ? "scheduled." : "for your pets.")</p></div>
+        }
+    </div>
+</div>

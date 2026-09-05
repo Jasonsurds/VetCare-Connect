@@ -1,0 +1,77 @@
+@model VetCare.Models.Appointment
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Edit appointment #@Model.AppointmentID</h3>
+                <a class="vc-card-link" asp-action="Index">← Back to appointments</a>
+            </div>
+            <div class="vc-card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.AppointmentID" />
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Pet *</label>
+                            <select name="petId" class="form-control-vc" asp-items="ViewBag.PetID" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Veterinarian *</label>
+                            <select name="vetId" class="form-control-vc" asp-items="ViewBag.VetID" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Service *</label>
+                            <select name="serviceType" class="form-control-vc" required>
+                                @foreach (var s in (string[])ViewBag.ServiceTypes!)
+                                {
+                                    @if (s == Model.ServiceType)
+                                    {
+                                        <option value="@s" selected>@s</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@s">@s</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Date &amp; time *</label>
+                            <input name="appointmentDate" type="datetime-local" class="form-control-vc"
+                                   value="@Model.AppointmentDate.ToString("yyyy-MM-ddTHH:mm")" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Status</label>
+                            <select name="status" class="form-control-vc">
+                                @foreach (var s in new[] { "Pending", "Confirmed", "Completed", "Cancelled" })
+                                {
+                                    @if (s == Model.Status)
+                                    {
+                                        <option value="@s" selected>@s</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@s">@s</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-vc">Notes</label>
+                            <textarea name="notes" class="form-control-vc">@Model.Notes</textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn-vc">Save changes</button>
+                        <a class="btn-vc-outline" asp-action="Details" asp-route-id="@Model.AppointmentID">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

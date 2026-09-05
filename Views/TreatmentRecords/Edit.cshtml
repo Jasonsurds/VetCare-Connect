@@ -1,0 +1,39 @@
+@model VetCare.Models.TreatmentRecord
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Edit treatment record #@Model.TreatmentID</h3>
+                <a class="vc-card-link" asp-action="Index">← Back to records</a>
+            </div>
+            <div class="vc-card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.TreatmentID" />
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label-vc">Diagnosis *</label>
+                            <input name="diagnosis" class="form-control-vc" value="@Model.Diagnosis" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-vc">Prescription</label>
+                            <textarea name="prescription" class="form-control-vc">@Model.Prescription</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-vc">Treatment notes</label>
+                            <textarea name="treatmentNotes" class="form-control-vc">@Model.TreatmentNotes</textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn-vc">Save changes</button>
+                        <a class="btn-vc-outline" asp-action="Details" asp-route-id="@Model.TreatmentID">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

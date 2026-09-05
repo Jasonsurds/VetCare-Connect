@@ -1,0 +1,65 @@
+@model VetCare.Models.Supplier
+@{
+    Layout = "_DashboardLayout";
+    var isAdmin = User.GetUserRole() == "Administrator";
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">Supplier profile</h3></div>
+            <div class="vc-card-body" style="font-size:.9rem;">
+                <p class="mb-2"><span class="form-hint">NAME</span><br /><span class="cell-strong">@Model.SupplierName</span></p>
+                <p class="mb-2"><span class="form-hint">CONTACT</span><br />@Model.ContactInfo</p>
+                <p class="mb-2"><span class="form-hint">PRODUCT CATALOG</span><br />@Model.ProductCatalog</p>
+                <p class="mb-0"><span class="form-hint">CONTRACT DETAILS</span><br />@Model.ContractDetails</p>
+                @if (isAdmin)
+                {
+                    <a class="btn-vc-outline mt-3" asp-action="Edit" asp-route-id="@Model.SupplierID">Edit supplier</a>
+                }
+                <a class="btn-vc-outline mt-3 ms-2" asp-action="Index">Back to suppliers</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Supplied items (@Model.InventoryItems.Count)</h3>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.InventoryItems.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Unit price</th><th>Status</th></tr></thead>
+                        <tbody>
+                        @foreach (var i in Model.InventoryItems.OrderBy(i => i.ItemName))
+                        {
+                            <tr>
+                                <td class="cell-strong">@i.ItemName</td>
+                                <td>@i.Category</td>
+                                <td>@i.Quantity</td>
+                                <td>@($"₱{i.UnitPrice:N2}")</td>
+                                <td>
+                                    @if (i.Quantity <= i.ReorderLevel)
+                                    {
+                                        <span class="badge-vc b-low">Reorder needed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-vc b-ok">In stock</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No inventory items linked to this supplier yet.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

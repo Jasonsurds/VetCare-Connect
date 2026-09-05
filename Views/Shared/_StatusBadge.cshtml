@@ -1,0 +1,16 @@
+@model string
+@{
+    var cls = Model switch
+    {
+        "Pending" => "b-pending",
+        "Confirmed" => "b-info",
+        "Completed" => "b-completed",
+        "Cancelled" => "b-cancelled",
+        "Paid" => "b-paid",
+        "Sent" => "b-sent",
+        "Active" => "b-active",
+        "Inactive" => "b-inactive",
+        _ => "b-neutral"
+    };
+}
+<span class="badge-vc @cls">@Model</span>

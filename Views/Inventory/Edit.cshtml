@@ -1,0 +1,66 @@
+@model VetCare.Models.InventoryItem
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Edit item — @Model.ItemName</h3>
+                <a class="vc-card-link" asp-action="Index">← Back to inventory</a>
+            </div>
+            <div class="vc-card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ItemID" />
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-vc" asp-for="ItemName">Item name *</label>
+                            <input asp-for="ItemName" class="form-control-vc" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc" asp-for="Category">Category *</label>
+                            <select asp-for="Category" class="form-control-vc">
+                                @foreach (var c in new[] { "Vaccine", "Antibiotic", "Dewormer", "Antiparasitic", "Supplement", "Supplies" })
+                                {
+                                    @if (c == Model.Category)
+                                    {
+                                        <option value="@c" selected>@c</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@c">@c</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc" asp-for="Quantity">Quantity *</label>
+                            <input asp-for="Quantity" type="number" min="0" class="form-control-vc" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc" asp-for="UnitPrice">Unit price (₱) *</label>
+                            <input asp-for="UnitPrice" type="number" step="0.01" min="0" class="form-control-vc" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc" asp-for="ReorderLevel">Reorder level *</label>
+                            <input asp-for="ReorderLevel" type="number" min="0" class="form-control-vc" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc" asp-for="SupplierID">Supplier</label>
+                            <select asp-for="SupplierID" class="form-control-vc" asp-items="ViewBag.SupplierID">
+                                <option value="">— None —</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn-vc">Save changes</button>
+                        <a class="btn-vc-outline" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,75 @@
+@{
+    Layout = "_DashboardLayout";
+    var options = (List<VetCare.Controllers.AppointmentFeeOption>)ViewBag.AppointmentOptions!;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Issue invoice</h3>
+                <a class="vc-card-link" asp-action="Index">← Back to billing</a>
+            </div>
+            <div class="vc-card-body">
+                @if (options.Any())
+                {
+                    <div class="dash-alert">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span>Most visits are billed automatically when the vet completes the consultation — this form is only for corrections or missed visits.</span>
+                    </div>
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label-vc">Completed appointment *</label>
+                                <select name="appointmentId" id="apptSelect" class="form-control-vc" required>
+                                    <option value="">— Select appointment —</option>
+                                    @foreach (var o in options)
+                                    {
+                                        <option value="@o.AppointmentID" data-fee="@o.Fee">@o.Label</option>
+                                    }
+                                </select>
+                                <div class="form-hint">The invoice is billed to the pet's owner automatically.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-vc">Total amount (₱) *</label>
+                                <input name="totalAmount" id="amountInput" type="number" step="0.01" min="1" class="form-control-vc" required placeholder="e.g. 500.00" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-vc">Payment method *</label>
+                                <select name="paymentMethod" class="form-control-vc">
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card">Card</option>
+                                    <option value="Online">Online (e-wallet / transfer)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn-vc">Issue invoice</button>
+                            <a class="btn-vc-outline" asp-action="Index">Cancel</a>
+                        </div>
+                    </form>
+
+                    @section Scripts {
+                        <script>
+                            document.getElementById('apptSelect').addEventListener('change', function () {
+                                const opt = this.selectedOptions[0];
+                                if (opt && opt.dataset.fee) {
+                                    document.getElementById('amountInput').value = parseFloat(opt.dataset.fee).toFixed(2);
+                                }
+                            });
+                        </script>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <p>No completed appointments are waiting for an invoice — completed consultations are billed automatically.</p>
+                        <a class="btn-vc-outline mt-2" asp-controller="Appointments" asp-action="Index">Go to appointments</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

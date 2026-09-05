@@ -1,0 +1,74 @@
+@model IEnumerable<VetCare.Models.Billing>
+@{
+    Layout = "_DashboardLayout";
+    var role = User.GetUserRole();
+    var canIssue = role is "Administrator" or "Clinic Staff";
+    var current = ViewBag.Status as string ?? "All";
+    var statuses = new[] { "All", "Pending", "Paid" };
+}
+
+<div class="filter-row">
+    <div class="d-flex gap-2 flex-wrap">
+        @foreach (var s in statuses)
+        {
+            <a class="btn-vc-outline" style="@(current == s ? "background:var(--primary,#0b5e52);color:#fff;border-color:#0b5e52;" : "")"
+               asp-action="Index" asp-route-status="@s">@s</a>
+        }
+    </div>
+    @if (canIssue)
+    {
+        <a class="btn-vc ms-auto" asp-action="Create">+ Issue invoice</a>
+    }
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">@(role == "Pet Owner" ? "My invoices" : "All invoices") (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Date</th>
+                        @if (role != "Pet Owner")
+                        {
+                            <th>Owner</th>
+                        }
+                        <th>Pet / Service</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr>
+                        <td class="cell-strong">#INV-@b.InvoiceID.ToString("D4")</td>
+                        <td class="cell-muted">@b.DateIssued.ToString("MMM dd, yyyy")</td>
+                        @if (role != "Pet Owner")
+                        {
+                            <td>@b.Owner?.Name</td>
+                        }
+                        <td>@b.Appointment?.Pet?.PetName <span class="cell-muted">· @b.Appointment?.ServiceType</span></td>
+                        <td class="cell-strong">@($"₱{b.TotalAmount:N2}")</td>
+                        <td>@b.PaymentMethod</td>
+                        <td><partial name="_StatusBadge" model="b.PaymentStatus" /></td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a class="btn-vc-outline btn-vc-sm" asp-action="Details" asp-route-id="@b.InvoiceID">Open</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No invoices found.</p></div>
+        }
+    </div>
+</div>

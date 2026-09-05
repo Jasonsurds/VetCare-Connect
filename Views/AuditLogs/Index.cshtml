@@ -1,0 +1,73 @@
+@model IEnumerable<VetCare.Models.AuditLog>
+@{
+    Layout = "_DashboardLayout";
+    var actions = new[] { "All", "Login", "Login Failed", "Logout", "Create", "Update", "Delete" };
+    var current = ViewBag.ActionType as string ?? "All";
+    var pageNum = (int)(ViewBag.Page ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+}
+
+<div class="filter-row">
+    <div class="d-flex gap-2 flex-wrap">
+        @foreach (var a in actions)
+        {
+            <a class="btn-vc-outline" style="@(current == a ? "background:var(--primary,#0b5e52);color:#fff;border-color:#0b5e52;" : "")"
+               asp-action="Index" asp-route-actionType="@a">@a</a>
+        }
+    </div>
+    <span class="page-note ms-auto">@(ViewBag.Total) total entries</span>
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">Audit trail (page @pageNum of @totalPages)</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td class="cell-muted" style="white-space:nowrap;">@log.Timestamp.ToString("MMM dd, yyyy")<div>@log.Timestamp.ToString("h:mm:ss tt")</div></td>
+                        <td class="cell-strong">@log.UserName</td>
+                        <td>
+                            <span class="badge-vc @(log.Action.Contains("Failed") || log.Action == "Delete" ? "b-low" : log.Action == "Login" || log.Action == "Create" ? "b-ok" : "b-info")">@log.Action</span>
+                        </td>
+                        <td>@log.EntityName</td>
+                        <td class="cell-muted">@log.Details</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No audit entries for this filter.</p></div>
+        }
+    </div>
+</div>
+
+@if (totalPages > 1)
+{
+    <div class="d-flex justify-content-center gap-2">
+        @if (pageNum > 1)
+        {
+            <a class="btn-vc-outline btn-vc-sm" asp-action="Index" asp-route-actionType="@current" asp-route-page="@(pageNum - 1)">← Newer</a>
+        }
+        @if (pageNum < totalPages)
+        {
+            <a class="btn-vc-outline btn-vc-sm" asp-action="Index" asp-route-actionType="@current" asp-route-page="@(pageNum + 1)">Older →</a>
+        }
+    </div>
+}

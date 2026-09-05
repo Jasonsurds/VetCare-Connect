@@ -1,0 +1,62 @@
+@model VetCare.Models.User
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Edit owner — @Model.Name</h3>
+                <a class="vc-card-link" asp-action="Index">← Back to owners</a>
+            </div>
+            <div class="vc-card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.UserID" />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Full name *</label>
+                            <input name="name" class="form-control-vc" value="@Model.Name" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Email</label>
+                            <input name="email" type="email" class="form-control-vc" value="@Model.Email" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Contact number</label>
+                            <input name="contactNumber" class="form-control-vc" value="@Model.ContactNumber" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Address</label>
+                            <input name="address" class="form-control-vc" value="@Model.Address" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Account status</label>
+                            <select name="isActive" class="form-control-vc">
+                                @if (Model.IsActive)
+                                {
+                                    <option value="true" selected>Active</option>
+                                    <option value="false">Inactive</option>
+                                }
+                                else
+                                {
+                                    <option value="true">Active</option>
+                                    <option value="false" selected>Inactive</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Reset password</label>
+                            <input name="newPassword" type="password" class="form-control-vc" placeholder="Leave blank to keep current" />
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn-vc">Save changes</button>
+                        <a class="btn-vc-outline" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

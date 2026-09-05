@@ -1,0 +1,55 @@
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Write treatment record</h3>
+                <a class="vc-card-link" asp-action="Index">← Back to records</a>
+            </div>
+            <div class="vc-card-body">
+                @if (((SelectList)ViewBag.AppointmentID!).Any())
+                {
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label-vc">Completed appointment *</label>
+                                <select name="appointmentId" class="form-control-vc" asp-items="ViewBag.AppointmentID" required>
+                                    <option value="">— Select appointment —</option>
+                                </select>
+                                <div class="form-hint">Only completed appointments without a record are listed.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-vc">Diagnosis *</label>
+                                <input name="diagnosis" class="form-control-vc" required placeholder="e.g. Mild atopic dermatitis" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-vc">Prescription</label>
+                                <textarea name="prescription" class="form-control-vc" placeholder="Medication, dosage, frequency..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-vc">Treatment notes</label>
+                                <textarea name="treatmentNotes" class="form-control-vc" placeholder="Procedures performed, follow-up advice..."></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn-vc">Save record</button>
+                            <a class="btn-vc-outline" asp-action="Index">Cancel</a>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <p>No completed appointments are waiting for a record.</p>
+                        <a class="btn-vc-outline mt-2" asp-controller="Appointments" asp-action="Index">Go to appointments</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

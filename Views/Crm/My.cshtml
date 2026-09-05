@@ -1,0 +1,79 @@
+@model IEnumerable<VetCare.Models.CrmRecord>
+@{
+    Layout = "_DashboardLayout";
+    var totalPoints = (int)(ViewBag.TotalPoints ?? 0);
+    var nextReward = 500;
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="vc-card" style="background: linear-gradient(120deg, #0b5e52 0%, #20a390 100%); border: none;">
+            <div class="vc-card-body text-center" style="color:#fff;">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.9;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <div class="stat-number" style="color:#fff; font-size:2.4rem;">@totalPoints</div>
+                <div style="opacity:.9; font-weight:600; font-size:.85rem;">loyalty points earned</div>
+                <hr style="border-color:rgba(255,255,255,.25); margin:16px 0;" />
+                <div style="font-size:.85rem;">
+                    @if (totalPoints >= nextReward)
+                    {
+                        <span>🎉 You've reached a reward tier — mention it at the front desk!</span>
+                    }
+                    else
+                    {
+                        <span>@(nextReward - totalPoints) more points until your next reward tier.</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">Send us your feedback</h3></div>
+            <div class="vc-card-body">
+                <form asp-action="SubmitFeedback" method="post">
+                    @Html.AntiForgeryToken()
+                    <textarea name="feedback" class="form-control-vc" required placeholder="How was your experience with the clinic?"></textarea>
+                    <button type="submit" class="btn-vc mt-3" style="width:100%; justify-content:center;">Submit feedback</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">My history (@Model.Count())</h3>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Date</th><th>Update</th><th>Points</th></tr></thead>
+                        <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="cell-muted">@c.InteractionDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(c.Interaction))
+                                    {
+                                        <div>@c.Interaction</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(c.Feedback))
+                                    {
+                                        <div class="cell-muted">Your feedback: “@c.Feedback”</div>
+                                    }
+                                </td>
+                                <td><span class="badge-vc b-info">+@c.LoyaltyPoints</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No activity yet — points appear here after your visits.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

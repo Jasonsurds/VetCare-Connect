@@ -1,0 +1,44 @@
+@model VetCare.Models.TreatmentRecord
+@{
+    Layout = "_DashboardLayout";
+    var canWrite = User.GetUserRole() is "Administrator" or "Veterinarian";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Treatment record #@Model.TreatmentID</h3>
+                <span class="badge-vc b-info">@Model.TreatmentDate.ToString("MMM dd, yyyy")</span>
+            </div>
+            <div class="vc-card-body">
+                <div class="row g-3 mb-3" style="font-size:.9rem;">
+                    <div class="col-md-4">
+                        <div class="form-hint">PET</div>
+                        <a asp-controller="Pets" asp-action="Details" asp-route-id="@Model.Appointment!.Pet!.PetID" class="cell-strong text-decoration-none text-teal">@Model.Appointment.Pet.PetName</a>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-hint">OWNER</div>
+                        <div class="cell-strong">@Model.Appointment.Pet.Owner?.Name</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-hint">VETERINARIAN</div>
+                        <div class="cell-strong">@Model.Appointment.Vet?.Name</div>
+                    </div>
+                </div>
+                <div style="font-size:.92rem;">
+                    <p class="mb-3"><span class="form-hint">DIAGNOSIS</span><br /><span class="cell-strong">@Model.Diagnosis</span></p>
+                    <p class="mb-3"><span class="form-hint">PRESCRIPTION</span><br />@(string.IsNullOrWhiteSpace(Model.Prescription) ? "—" : Model.Prescription)</p>
+                    <p class="mb-0"><span class="form-hint">TREATMENT NOTES</span><br />@(string.IsNullOrWhiteSpace(Model.TreatmentNotes) ? "—" : Model.TreatmentNotes)</p>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    @if (canWrite)
+                    {
+                        <a class="btn-vc-outline" asp-action="Edit" asp-route-id="@Model.TreatmentID">Edit record</a>
+                    }
+                    <a class="btn-vc-outline" asp-action="Index">Back to records</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

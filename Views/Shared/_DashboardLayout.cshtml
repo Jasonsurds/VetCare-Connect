@@ -1,0 +1,262 @@
+@{
+    var role = User.GetUserRole();
+    var name = User.Identity?.Name ?? "User";
+    var initials = string.Join("", name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w[0])).ToUpper();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var today = DateTime.Now.ToString("MMMM dd, yyyy");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} - VetCare Connect" : "VetCare Connect")</title>
+    <link rel="icon" type="image/png" href="~/images/logo-mark-favicon.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+</head>
+<body>
+<div class="dash-shell">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="dash-sidebar">
+        <a class="side-brand" asp-controller="Dashboard" asp-action="Index">
+            <img src="~/images/logo-mark.png" alt="VetCare Connect logo" style="width:36px; height:36px; object-fit:contain; flex-shrink:0;" />
+            <span>VetCare Connect</span>
+        </a>
+
+        <nav class="side-nav">
+            @if (role == "Administrator")
+            {
+                <div class="side-section">Overview</div>
+                <a class="side-link @(currentController == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                    Dashboard
+                </a>
+                <div class="side-section">Clinic Operations</div>
+                <a class="side-link @(currentController == "Appointments" ? "active" : "")" asp-controller="Appointments" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Appointments
+                </a>
+                <a class="side-link @(currentController == "Pets" ? "active" : "")" asp-controller="Pets" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="8" r="2"></circle><path d="M12 11c-3 0-5.5 2.5-5.5 5.5S9 22 12 22s5.5-2.5 5.5-5.5S15 11 12 11z"></path></svg>
+                    Pets
+                </a>
+                <a class="side-link @(currentController == "Owners" ? "active" : "")" asp-controller="Owners" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                    Pet Owners
+                </a>
+                <a class="side-link @(currentController == "Veterinarians" ? "active" : "")" asp-controller="Veterinarians" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                    Veterinarians
+                </a>
+                <a class="side-link @(currentController == "TreatmentRecords" ? "active" : "")" asp-controller="TreatmentRecords" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Treatment Records
+                </a>
+                <div class="side-section">Business</div>
+                <a class="side-link @(currentController == "Inventory" ? "active" : "")" asp-controller="Inventory" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    Medicine Inventory
+                </a>
+                <a class="side-link @(currentController == "Billing" ? "active" : "")" asp-controller="Billing" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    Billing
+                </a>
+                <a class="side-link @(currentController == "Suppliers" ? "active" : "")" asp-controller="Suppliers" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1z"></path><path d="M16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                    Suppliers
+                </a>
+                <div class="side-section">CRM &amp; Insights</div>
+                <a class="side-link @(currentController == "VaccinationReminders" ? "active" : "")" asp-controller="VaccinationReminders" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    Vaccination Reminders
+                </a>
+                <a class="side-link @(currentController == "Crm" ? "active" : "")" asp-controller="Crm" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Customer CRM
+                </a>
+                <a class="side-link @(currentController == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Reports
+                </a>
+                <div class="side-section">Administration</div>
+                <a class="side-link @(currentController == "Users" ? "active" : "")" asp-controller="Users" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    User Accounts
+                </a>
+                <a class="side-link @(currentController == "AuditLogs" ? "active" : "")" asp-controller="AuditLogs" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Audit Logs
+                </a>
+            }
+            else if (role == "Veterinarian")
+            {
+                <div class="side-section">My Practice</div>
+                <a class="side-link @(currentController == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                    Dashboard
+                </a>
+                <a class="side-link @(currentController == "Appointments" ? "active" : "")" asp-controller="Appointments" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    My Schedule
+                </a>
+                <a class="side-link @(currentController == "TreatmentRecords" ? "active" : "")" asp-controller="TreatmentRecords" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Treatment Records
+                </a>
+                <a class="side-link @(currentController == "VaccinationReminders" ? "active" : "")" asp-controller="VaccinationReminders" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    Vaccination Reminders
+                </a>
+                <div class="side-section">Reference</div>
+                <a class="side-link @(currentController == "Pets" ? "active" : "")" asp-controller="Pets" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="8" r="2"></circle><path d="M12 11c-3 0-5.5 2.5-5.5 5.5S9 22 12 22s5.5-2.5 5.5-5.5S15 11 12 11z"></path></svg>
+                    Patient Pets
+                </a>
+                <a class="side-link @(currentController == "Inventory" ? "active" : "")" asp-controller="Inventory" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    Medicine Inventory
+                </a>
+            }
+            else if (role == "Clinic Staff")
+            {
+                <div class="side-section">Front Desk</div>
+                <a class="side-link @(currentController == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                    Dashboard
+                </a>
+                <a class="side-link @(currentController == "Appointments" ? "active" : "")" asp-controller="Appointments" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Appointments
+                </a>
+                <a class="side-link @(currentController == "Pets" ? "active" : "")" asp-controller="Pets" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="8" r="2"></circle><path d="M12 11c-3 0-5.5 2.5-5.5 5.5S9 22 12 22s5.5-2.5 5.5-5.5S15 11 12 11z"></path></svg>
+                    Pets
+                </a>
+                <a class="side-link @(currentController == "Owners" ? "active" : "")" asp-controller="Owners" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                    Pet Owners
+                </a>
+                <div class="side-section">Operations</div>
+                <a class="side-link @(currentController == "Billing" ? "active" : "")" asp-controller="Billing" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    Billing
+                </a>
+                <a class="side-link @(currentController == "Inventory" ? "active" : "")" asp-controller="Inventory" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    Medicine Inventory
+                </a>
+                <a class="side-link @(currentController == "VaccinationReminders" ? "active" : "")" asp-controller="VaccinationReminders" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    Vaccination Reminders
+                </a>
+                <a class="side-link @(currentController == "Crm" ? "active" : "")" asp-controller="Crm" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Customer CRM
+                </a>
+                <a class="side-link @(currentController == "Suppliers" ? "active" : "")" asp-controller="Suppliers" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1z"></path><path d="M16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                    Suppliers
+                </a>
+            }
+            else if (role == "Pet Owner")
+            {
+                <div class="side-section">My Pets</div>
+                <a class="side-link @(currentController == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                    Dashboard
+                </a>
+                <a class="side-link @(currentController == "Pets" ? "active" : "")" asp-controller="Pets" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="8" r="2"></circle><path d="M12 11c-3 0-5.5 2.5-5.5 5.5S9 22 12 22s5.5-2.5 5.5-5.5S15 11 12 11z"></path></svg>
+                    My Pets
+                </a>
+                <a class="side-link @(currentController == "VaccinationReminders" ? "active" : "")" asp-controller="VaccinationReminders" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    Vaccination Reminders
+                </a>
+                <div class="side-section">Appointments &amp; Bills</div>
+                <a class="side-link @(currentController == "Appointments" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Appointments" asp-action="Create">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    Book Appointment
+                </a>
+                <a class="side-link @(currentController == "Appointments" && ViewContext.RouteData.Values["action"]?.ToString() != "Create" ? "active" : "")" asp-controller="Appointments" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    My Appointments
+                </a>
+                <a class="side-link @(currentController == "Billing" ? "active" : "")" asp-controller="Billing" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    My Invoices
+                </a>
+                <div class="side-section">Rewards</div>
+                <a class="side-link @(currentController == "Crm" ? "active" : "")" asp-controller="Crm" asp-action="My">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Loyalty &amp; Feedback
+                </a>
+            }
+            else if (role == "Supplier")
+            {
+                <div class="side-section">Supplier Portal</div>
+                <a class="side-link @(currentController == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                    Dashboard
+                </a>
+                <a class="side-link @(currentController == "Inventory" ? "active" : "")" asp-controller="Inventory" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    My Catalog
+                </a>
+                <a class="side-link @(currentController == "Suppliers" ? "active" : "")" asp-controller="Suppliers" asp-action="My">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1z"></path><path d="M16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                    My Profile
+                </a>
+            }
+        </nav>
+
+        <div class="side-footer">
+            <div class="side-user">
+                <div class="side-avatar">@initials</div>
+                <div style="min-width:0;">
+                    <div class="side-user-name" title="@name">@name</div>
+                    <div class="side-user-role">@role</div>
+                </div>
+            </div>
+            <a class="btn-logout" asp-controller="Account" asp-action="Logout">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Sign out
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <div class="dash-main">
+        <header class="dash-topbar">
+            <div>
+                <h1 class="dash-title">@ViewData["DashTitle"]</h1>
+                <div class="dash-title-sub">@today · VetCare Connect Clinic Portal</div>
+            </div>
+            <div class="topbar-right">
+                <span class="role-chip">@role</span>
+                <a class="btn-site-link" asp-controller="Home" asp-action="Index">View public site</a>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="dash-alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>@TempData["SuccessMessage"]</span>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+</div>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/dashboard.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

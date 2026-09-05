@@ -1,0 +1,75 @@
+@model IEnumerable<VetCare.Models.TreatmentRecord>
+@{
+    Layout = "_DashboardLayout";
+    var canWrite = User.GetUserRole() is "Administrator" or "Veterinarian";
+}
+
+<div class="filter-row">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control-vc" placeholder="Search pet, diagnosis or prescription..." />
+        </div>
+        <button class="btn-vc-outline" type="submit">Search</button>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+        {
+            <a class="btn-vc-outline" asp-action="Index">Clear</a>
+        }
+    </form>
+    @if (canWrite)
+    {
+        <a class="btn-vc ms-auto" asp-action="Create">+ New treatment record</a>
+    }
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">Treatment records (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Pet</th>
+                        @if (User.GetUserRole() != "Pet Owner")
+                        {
+                            <th>Vet</th>
+                        }
+                        <th>Diagnosis</th>
+                        <th>Prescription</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td class="cell-strong">@t.TreatmentDate.ToString("MMM dd, yyyy")</td>
+                        <td>@t.Appointment?.Pet?.PetName</td>
+                        @if (User.GetUserRole() != "Pet Owner")
+                        {
+                            <td>@t.Appointment?.Vet?.Name</td>
+                        }
+                        <td>@t.Diagnosis</td>
+                        <td class="cell-muted">@(t.Prescription != null && t.Prescription.Length > 60 ? t.Prescription[..60] + "…" : t.Prescription ?? "—")</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a class="btn-vc-outline btn-vc-sm" asp-action="Details" asp-route-id="@t.TreatmentID">View</a>
+                            @if (canWrite)
+                            {
+                                <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@t.TreatmentID">Edit</a>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No treatment records found.</p></div>
+        }
+    </div>
+</div>

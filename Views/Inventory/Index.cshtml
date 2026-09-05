@@ -1,0 +1,107 @@
+@model IEnumerable<VetCare.Models.InventoryItem>
+@{
+    Layout = "_DashboardLayout";
+    var role = User.GetUserRole();
+    var canManage = role is "Administrator" or "Clinic Staff";
+    var lowCount = Model.Count(i => i.Quantity <= i.ReorderLevel);
+}
+
+<div class="filter-row">
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn-vc-outline" style="@(ViewBag.Filter as string != "low" ? "background:var(--primary,#0b5e52);color:#fff;border-color:#0b5e52;" : "")" asp-action="Index" asp-route-search="@ViewBag.Search">All items</a>
+        <a class="btn-vc-outline" style="@(ViewBag.Filter as string == "low" ? "background:#b91c1c;color:#fff;border-color:#b91c1c;" : "")" asp-action="Index" asp-route-filter="low" asp-route-search="@ViewBag.Search">
+            Low stock (@lowCount)
+        </a>
+    </div>
+    <form method="get" class="d-flex gap-2 flex-wrap ms-auto">
+        <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control-vc" placeholder="Search item or category..." />
+        </div>
+        <button class="btn-vc-outline" type="submit">Search</button>
+    </form>
+    @if (canManage)
+    {
+        <a class="btn-vc" asp-action="Create">+ Add item</a>
+    }
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">Inventory (@Model.Count() items)</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th>Stock</th>
+                        <th>Reorder at</th>
+                        <th>Unit price</th>
+                        <th>Supplier</th>
+                        @if (canManage)
+                        {
+                            <th style="text-align:right;">Actions</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var i in Model)
+                {
+                    <tr>
+                        <td class="cell-strong">@i.ItemName</td>
+                        <td>@i.Category</td>
+                        <td>
+                            <span class="badge-vc @(i.Quantity <= i.ReorderLevel ? "b-low" : "b-ok")">@i.Quantity in stock</span>
+                        </td>
+                        <td class="cell-muted">@i.ReorderLevel</td>
+                        <td class="cell-strong">@($"₱{i.UnitPrice:N2}")</td>
+                        <td class="cell-muted">@(i.Supplier?.SupplierName ?? "—")</td>
+                        @if (canManage)
+                        {
+                            <td style="text-align:right; white-space:nowrap;">
+                                <form asp-action="AdjustStock" method="post" class="d-inline stock-adjust-form" data-item="@i.ItemName">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@i.ItemID" />
+                                    <input type="hidden" name="change" />
+                                    <input type="hidden" name="reason" />
+                                    <button class="btn-vc-outline btn-vc-sm" type="submit">Adjust stock</button>
+                                </form>
+                                <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@i.ItemID">Edit</a>
+                                <form asp-action="Delete" method="post" class="d-inline" data-confirm="Remove '@i.ItemName' from the inventory?">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No inventory items found.</p></div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.stock-adjust-form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                const item = form.getAttribute('data-item');
+                const input = prompt(`Stock adjustment for "${item}"\nEnter quantity: a positive number to add stock, or negative (e.g. -3) to deduct.`, "1");
+                if (input === null) { e.preventDefault(); return; }
+                const value = parseInt(input, 10);
+                if (isNaN(value) || value === 0) { alert('Please enter a non-zero whole number.'); e.preventDefault(); return; }
+                form.querySelector('input[name="change"]').value = value;
+                const reason = prompt('Reason (optional) — e.g. "Delivered by supplier", "Used in consultation":') ?? '';
+                form.querySelector('input[name="reason"]').value = reason;
+            });
+        });
+    </script>
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VetCare Connect</title>
+    <link rel="icon" type="image/png" href="~/images/logo-mark-favicon.png" />
+    <meta name="description" content="Connecting pet owners, veterinarians, and clinics in one unified platform. Manage appointments, medical records, billing, inventory, and more." />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="vc-navbar">
+        <div class="container d-flex align-items-center justify-content-between">
+            <a class="vc-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <img src="~/images/logo-mark.png" alt="VetCare Connect logo" style="width:36px; height:36px; object-fit:contain;" />
+                <span>VetCare Connect</span>
+            </a>
+
+            <nav class="d-none d-md-flex align-items-center gap-1">
+                <a class="vc-nav-link active" href="#home">Home</a>
+                <a class="vc-nav-link" href="#features">Features</a>
+                <a class="vc-nav-link" href="#portals">About</a>
+                <a class="vc-nav-link" href="#contact">Contact</a>
+            </nav>
+
+            <div class="d-flex align-items-center gap-2">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn-vc-primary">My Dashboard</a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn-vc-ghost">Sign In</a>
+                    <a asp-controller="Account" asp-action="Login" class="btn-vc-primary">Get Started</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <!-- Appointment Modal -->
+    <div class="vc-modal-overlay" id="appointmentModal">
+        <div class="vc-modal-dialog">
+            <button class="vc-modal-close close-modal" aria-label="Close modal">&times;</button>
+            <div class="text-center mb-4">
+                <div class="category-badge mb-2">🐾 Instant Booking</div>
+                <h3 class="font-serif fs-3">Schedule Your Pet's Visit</h3>
+                <p class="text-muted small">Choose your preferred vet service and appointment time.</p>
+            </div>
+            <form id="bookingForm">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Pet Name</label>
+                    <input type="text" class="form-control" placeholder="e.g. Milo, Luna" required />
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small">Pet Type</label>
+                        <select class="form-select" required>
+                            <option value="">Select...</option>
+                            <option value="dog">Dog 🐕</option>
+                            <option value="cat">Cat 🐈</option>
+                            <option value="bird">Bird 🦜</option>
+                            <option value="other">Other 🐾</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small">Service Required</label>
+                        <select class="form-select" required>
+                            <option value="checkup">General Checkup</option>
+                            <option value="vaccine">Vaccination</option>
+                            <option value="dental">Dental Cleaning</option>
+                            <option value="grooming">Grooming & Care</option>
+                            <option value="surgery">Specialist Consult</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Preferred Date & Time</label>
+                    <input type="datetime-local" class="form-control" required />
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small">Owner Email / Phone</label>
+                    <input type="email" class="form-control" placeholder="owner@example.com" required />
+                </div>
+                <button type="submit" class="btn-vc-primary w-100 justify-content-center py-2 fs-6">Confirm Appointment Request</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

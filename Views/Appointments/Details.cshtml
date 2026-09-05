@@ -1,0 +1,143 @@
+@model VetCare.Models.Appointment
+@{
+    Layout = "_DashboardLayout";
+    var role = User.GetUserRole();
+    var canManage = role is "Administrator" or "Clinic Staff";
+    var canComplete = canManage || (role == "Veterinarian" && Model.VetID == User.GetUserId());
+    var canCancel = canManage || (role == "Pet Owner" && Model.Pet!.OwnerID == User.GetUserId() && (Model.Status == "Pending" || Model.Status == "Confirmed"));
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Appointment details</h3>
+                <partial name="_StatusBadge" model="Model.Status" />
+            </div>
+            <div class="vc-card-body">
+                <div class="row g-3" style="font-size:.92rem;">
+                    <div class="col-md-6">
+                        <div class="form-hint">PET</div>
+                        <div class="cell-strong">@Model.Pet?.PetName (@Model.Pet?.Species)</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-hint">OWNER</div>
+                        <div class="cell-strong">@Model.Pet?.Owner?.Name</div>
+                        <div class="cell-muted">@(Model.Pet?.Owner?.ContactNumber ?? "—")</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-hint">VETERINARIAN</div>
+                        <div class="cell-strong">@Model.Vet?.Name</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-hint">DATE &amp; TIME</div>
+                        <div class="cell-strong">@Model.AppointmentDate.ToString("dddd, MMM dd, yyyy")</div>
+                        <div class="cell-muted">@Model.AppointmentDate.ToString("h:mm tt")</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-hint">SERVICE</div>
+                        <div class="cell-strong">@Model.ServiceType</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-hint">NOTES</div>
+                        <div>@(string.IsNullOrWhiteSpace(Model.Notes) ? "—" : Model.Notes)</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4 flex-wrap">
+                    @if (Model.Status == "Pending" && canManage)
+                    {
+                        <form asp-action="Approve" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.AppointmentID" />
+                            <button class="btn-vc" type="submit">Approve appointment</button>
+                        </form>
+                    }
+                    @if (Model.Status == "Confirmed" && canComplete)
+                    {
+                        <form asp-action="Complete" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.AppointmentID" />
+                            <button class="btn-vc" type="submit">Mark as completed</button>
+                        </form>
+                    }
+                    @if (Model.Status == "Pending" && canCancel)
+                    {
+                        <form asp-action="Cancel" method="post" class="d-inline" data-confirm="Cancel this appointment?">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.AppointmentID" />
+                            <button class="btn-vc-outline btn-vc-danger" type="submit">Cancel appointment</button>
+                        </form>
+                    }
+                    @if (role == "Administrator")
+                    {
+                        <form asp-action="Delete" method="post" class="d-inline" data-confirm="Permanently delete this appointment?">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.AppointmentID" />
+                            <button class="btn-vc-outline btn-vc-danger" type="submit">Delete</button>
+                        </form>
+                    }
+                    <a class="btn-vc-outline" asp-action="Index">Back to list</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Treatment record</h3>
+            </div>
+            <div class="vc-card-body">
+                @if (Model.TreatmentRecord != null)
+                {
+                    <div style="font-size:.9rem;">
+                        <p class="mb-2"><span class="form-hint">DIAGNOSIS</span><br />@Model.TreatmentRecord.Diagnosis</p>
+                        <p class="mb-2"><span class="form-hint">PRESCRIPTION</span><br />@(string.IsNullOrWhiteSpace(Model.TreatmentRecord.Prescription) ? "—" : Model.TreatmentRecord.Prescription)</p>
+                        <p class="mb-0"><span class="form-hint">TREATMENT NOTES</span><br />@(string.IsNullOrWhiteSpace(Model.TreatmentRecord.TreatmentNotes) ? "—" : Model.TreatmentRecord.TreatmentNotes)</p>
+                    </div>
+                }
+                else if (Model.Status == "Completed" && (canComplete || canManage))
+                {
+                    <div class="empty-state">
+                        <p>This visit has no treatment record yet.</p>
+                        <a class="btn-vc mt-2" asp-controller="TreatmentRecords" asp-action="Create" asp-route-appointmentId="@Model.AppointmentID">Write treatment record</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state"><p>Treatment record appears after the visit is completed.</p></div>
+                }
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Invoice</h3>
+            </div>
+            <div class="vc-card-body">
+                @if (Model.Billing != null)
+                {
+                    <div style="font-size:.92rem;">
+                        <p class="mb-2"><span class="cell-strong">Invoice:</span> #INV-@Model.Billing.InvoiceID.ToString("D4")</p>
+                        <p class="mb-2"><span class="cell-strong">Amount:</span> @($"₱{Model.Billing.TotalAmount:N2}")</p>
+                        <p class="mb-2"><span class="cell-strong">Method:</span> @Model.Billing.PaymentMethod</p>
+                        <p class="mb-0"><span class="cell-strong">Status:</span> <partial name="_StatusBadge" model="Model.Billing.PaymentStatus" /></p>
+                    </div>
+                    <a class="btn-vc-outline mt-3" asp-controller="Billing" asp-action="Details" asp-route-id="@Model.Billing.InvoiceID">Open invoice</a>
+                }
+                else if (Model.Status == "Completed" && canManage)
+                {
+                    <div class="empty-state">
+                        <p>No invoice on file for this visit (completed before automatic billing).</p>
+                        <a class="btn-vc mt-2" asp-controller="Billing" asp-action="Create" asp-route-appointmentId="@Model.AppointmentID">Issue invoice manually</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state"><p>The bill is automatically sent to Billing once the consultation is completed.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

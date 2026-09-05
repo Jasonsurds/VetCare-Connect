@@ -1,0 +1,105 @@
+@model VetCare.Models.Pet
+@{
+    Layout = "_DashboardLayout";
+    var canManage = User.GetUserRole() is "Administrator" or "Clinic Staff";
+    var canBook = User.GetUserRole() == "Pet Owner";
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="vc-card">
+            <div class="vc-card-body text-center">
+                <div class="side-avatar mx-auto mb-3" style="width:72px;height:72px;font-size:1.4rem;">🐾</div>
+                <h3 class="vc-card-title" style="font-size:1.3rem;">@Model.PetName</h3>
+                <p class="page-note mb-1">@Model.Species · @(Model.Breed ?? "Mixed breed")</p>
+                <p class="page-note">@Model.Age year(s) old</p>
+                <span class="badge-vc b-ok mb-3">Active patient</span>
+                <hr style="border-color:var(--border-light);" />
+                <div class="text-start" style="font-size:.88rem;">
+                    <p class="mb-2"><span class="cell-strong">Owner:</span> @Model.Owner?.Name</p>
+                    <p class="mb-2"><span class="cell-strong">Contact:</span> @(Model.Owner?.ContactNumber ?? "—")</p>
+                    <p class="mb-0"><span class="cell-strong">Registered:</span> @Model.CreatedDate.ToString("MMM dd, yyyy")</p>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-3 flex-wrap">
+                    @if (canManage)
+                    {
+                        <a class="btn-vc btn-vc-sm" asp-action="Edit" asp-route-id="@Model.PetID">Edit</a>
+                    }
+                    @if (canBook)
+                    {
+                        <a class="btn-vc btn-vc-sm" asp-controller="Appointments" asp-action="Create" asp-route-petId="@Model.PetID">Book visit</a>
+                    }
+                    <a class="btn-vc-outline btn-vc-sm" asp-controller="VaccinationReminders" asp-action="Create" asp-route-petId="@Model.PetID">Set reminder</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">Medical history</h3></div>
+            <div class="vc-card-body">
+                <p style="font-size:.9rem; white-space:pre-wrap;">@(string.IsNullOrWhiteSpace(Model.MedicalHistory) ? "No medical history recorded yet." : Model.MedicalHistory)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Visit history (@Model.Appointments.Count)</h3>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.Appointments.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Date</th><th>Vet</th><th>Service</th><th>Status</th><th>Diagnosis</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var a in Model.Appointments.OrderByDescending(a => a.AppointmentDate))
+                        {
+                            <tr>
+                                <td class="cell-strong">@a.AppointmentDate.ToString("MMM dd, yyyy")<div class="cell-muted">@a.AppointmentDate.ToString("h:mm tt")</div></td>
+                                <td>@a.Vet?.Name</td>
+                                <td>@a.ServiceType</td>
+                                <td><partial name="_StatusBadge" model="a.Status" /></td>
+                                <td>@(a.TreatmentRecord != null ? a.TreatmentRecord.Diagnosis : "—")</td>
+                                <td><a class="btn-vc-outline btn-vc-sm" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.AppointmentID">Open</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No visits recorded yet.</p></div>
+                }
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Vaccination reminders (@Model.VaccinationReminders.Count)</h3>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.VaccinationReminders.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Vaccine</th><th>Due date</th><th>Status</th></tr></thead>
+                        <tbody>
+                        @foreach (var r in Model.VaccinationReminders.OrderByDescending(r => r.DueDate))
+                        {
+                            <tr>
+                                <td class="cell-strong">@r.VaccineName</td>
+                                <td>@r.DueDate.ToString("MMM dd, yyyy")</td>
+                                <td><partial name="_StatusBadge" model="r.Status" /></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No vaccination reminders for this pet.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

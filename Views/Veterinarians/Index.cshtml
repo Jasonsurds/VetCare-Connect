@@ -1,0 +1,54 @@
+@model IEnumerable<VetCare.Controllers.VetListItem>
+@{
+    Layout = "_DashboardLayout";
+    var isAdmin = User.GetUserRole() == "Administrator";
+}
+
+<div class="filter-row">
+    <p class="page-note mb-0">Doctors on staff and their current workload.</p>
+    @if (isAdmin)
+    {
+        <a class="btn-vc ms-auto" asp-action="Create">+ Add veterinarian</a>
+    }
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">Veterinarians (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        <table class="vc-table">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Appointments</th>
+                    <th>Status</th>
+                    @if (isAdmin)
+                    {
+                        <th style="text-align:right;">Actions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var v in Model)
+            {
+                <tr>
+                    <td class="cell-strong">@v.Name</td>
+                    <td>@(v.Email ?? "—")</td>
+                    <td>@(v.ContactNumber ?? "—")</td>
+                    <td><span class="badge-vc b-info">@v.AppointmentCount</span></td>
+                    <td><partial name="_StatusBadge" model='@(v.IsActive ? "Active" : "Inactive")' /></td>
+                    @if (isAdmin)
+                    {
+                        <td style="text-align:right;">
+                            <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@v.UserID">Edit</a>
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

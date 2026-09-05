@@ -1,0 +1,31 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Access Denied - VetCare Connect";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="icon" type="image/png" href="~/images/logo-mark-favicon.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body style="background-color:#ebf5f3;">
+    <div class="d-flex align-items-center justify-content-center" style="min-height:100vh;">
+        <div class="text-center bg-white p-5" style="border-radius:28px; box-shadow:0 20px 48px rgba(11,94,82,.08); max-width:460px;">
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:64px;height:64px;border-radius:50%;background:#fee2e2;color:#dc2626;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h1 class="font-serif" style="color:var(--text-primary);">Access denied</h1>
+            <p class="text-muted">Your account does not have permission to open that page. If you believe this is a mistake, contact the clinic administrator.</p>
+            <a class="btn-vc-primary mt-2 d-inline-flex" href="@Url.Action("Index", "Dashboard")">Back to my dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

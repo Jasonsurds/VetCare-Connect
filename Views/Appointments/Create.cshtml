@@ -1,0 +1,57 @@
+@{
+    Layout = "_DashboardLayout";
+    var role = User.GetUserRole();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Schedule an appointment</h3>
+                <a class="vc-card-link" asp-action="Index">← Back to appointments</a>
+            </div>
+            <div class="vc-card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Pet *</label>
+                            <select name="petId" class="form-control-vc" asp-items="ViewBag.PetID" required>
+                                <option value="">— Select pet —</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Veterinarian *</label>
+                            <select name="vetId" class="form-control-vc" asp-items="ViewBag.VetID" required>
+                                <option value="">— Select veterinarian —</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Service required *</label>
+                            <select name="serviceType" class="form-control-vc" required>
+                                @foreach (var s in (string[])ViewBag.ServiceTypes!)
+                                {
+                                    <option value="@s">@s</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Preferred date &amp; time *</label>
+                            <input name="appointmentDate" type="datetime-local" class="form-control-vc" required />
+                            <div class="form-hint">Clinic hours: 8:00 AM – 6:00 PM daily.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-vc">Notes / concerns</label>
+                            <textarea name="notes" class="form-control-vc" placeholder="Describe your pet's symptoms or the reason for the visit..."></textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn-vc">Confirm appointment request</button>
+                        <a class="btn-vc-outline" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

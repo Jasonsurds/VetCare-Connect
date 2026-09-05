@@ -1,0 +1,621 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Sign In - VetCare Connect";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="icon" type="image/png" href="~/images/logo-mark-favicon.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        /* Standalone Full-Screen Split Layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+            background-color: #ebf5f3;
+        }
+
+        .login-page-container {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Left Side Panel */
+        .login-left-side {
+            width: 50%;
+            min-height: 100vh;
+            background: radial-gradient(circle at 10% 10%, #eef7f5 0%, #e1f0ec 60%, #d8eae5 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 36px 48px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .brand-icon-box {
+            width: 36px;
+            height: 36px;
+            background: #0b6b61;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(11, 107, 97, 0.25);
+        }
+
+        .brand-title {
+            font-family: var(--font-heading, 'Lora', serif);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0b5e52;
+        }
+
+        .brand-title span {
+            color: #0b6b61;
+        }
+
+        .card-center-wrapper {
+            width: 100%;
+            max-width: 440px;
+            margin: 20px auto;
+        }
+
+        .login-box {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 38px 34px;
+            box-shadow: 0 20px 48px rgba(11, 94, 82, 0.07);
+            border: 1px solid #e1ece9;
+        }
+
+        .main-heading {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #0c433b;
+            margin-bottom: 4px;
+            letter-spacing: -0.3px;
+        }
+
+        .sub-heading {
+            font-size: 0.88rem;
+            color: #64748b;
+            margin-bottom: 26px;
+        }
+
+        .field-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: #475569;
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .custom-input {
+            width: 100%;
+            height: 46px;
+            border-radius: 12px;
+            border: 1.5px solid #dbe6e3;
+            padding: 10px 16px;
+            font-size: 0.92rem;
+            color: #0f2c27;
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .custom-input:focus {
+            border-color: #0b6b61;
+            box-shadow: 0 0 0 4px rgba(11, 107, 97, 0.12);
+            outline: none;
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .eye-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        .eye-toggle-btn:hover {
+            color: #0b6b61;
+        }
+
+        .form-options-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+        }
+
+        .remember-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: #0b6b61;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .forgot-pass-link {
+            color: #0b6b61;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .forgot-pass-link:hover {
+            color: #07483f;
+            text-decoration: underline;
+        }
+
+        .btn-signin-primary {
+            width: 100%;
+            height: 46px;
+            background-color: #0b6b61;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px rgba(11, 107, 97, 0.2);
+            margin-bottom: 12px;
+        }
+
+        .btn-signin-primary:hover {
+            background-color: #07483f;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(11, 107, 97, 0.3);
+        }
+
+        .btn-signin-google {
+            width: 100%;
+            height: 46px;
+            background: #ffffff;
+            color: #1e293b;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 22px;
+        }
+
+        .btn-signin-google:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .login-error-alert {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+        }
+
+        .login-footer-text {
+            text-align: center;
+            font-size: 0.88rem;
+            color: #64748b;
+            margin-top: 24px;
+        }
+
+        .signup-free-link {
+            color: #0b6b61;
+            font-weight: 700;
+            text-decoration: none;
+            margin-left: 4px;
+        }
+
+        .signup-free-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Right Side Panel (Hero Image & Badges) */
+        .login-right-side {
+            width: 50%;
+            min-height: 100vh;
+            position: relative;
+            background-image: url('@Url.Content("~/images/vet_login_hero.png")');
+            background-size: cover;
+            background-position: center center;
+            overflow: hidden;
+        }
+
+        .dark-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.28) 100%);
+        }
+
+        .top-left-badges {
+            position: absolute;
+            top: 36px;
+            left: 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .badge-pill-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 10px 18px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            width: max-content;
+            transition: transform 0.25s ease;
+        }
+
+        .badge-pill-card:hover {
+            transform: translateX(4px);
+        }
+
+        .icon-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #ffffff;
+        }
+
+        .icon-circle-teal { background: #0b6b61; }
+        .icon-circle-purple { background: #6b21a8; }
+        .icon-circle-cyan { background: #0284c7; }
+
+        .badge-main-text {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .badge-sub-text {
+            font-size: 0.76rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .bottom-teal-banner {
+            position: absolute;
+            bottom: 32px;
+            left: 32px;
+            right: 32px;
+            background: rgba(11, 107, 97, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 20px 28px;
+            color: #ffffff;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 10;
+        }
+
+        .banner-brand-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .banner-icon-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .banner-brand-name {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            opacity: 0.95;
+            text-transform: uppercase;
+        }
+
+        .banner-main-title {
+            font-size: 1.65rem;
+            font-weight: 700;
+            margin: 0;
+            font-family: var(--font-heading, 'Lora', serif);
+            color: #ffffff;
+        }
+
+        /* Toast Popup */
+        .vc-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0b6b61;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .vc-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        @@media (max-width: 991px) {
+            .login-page-container { flex-direction: column; }
+            .login-left-side { width: 100%; min-height: auto; padding: 24px; }
+            .login-right-side { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-page-container">
+    <!-- Left Panel: Login Form & Branding -->
+    <div class="login-left-side">
+        <!-- Top Logo -->
+        <a asp-controller="Home" asp-action="Index" class="brand-header">
+            <img src="~/images/logo-mark.png" alt="VetCare Connect logo" style="width:42px; height:42px; object-fit:contain;" />
+            <span class="brand-title">VetCare <span>Connect</span></span>
+        </a>
+
+        <!-- Center Card -->
+        <div class="card-center-wrapper">
+            <div class="login-box">
+                <h1 class="main-heading">Welcome back</h1>
+                <p class="sub-heading">Welcome back! Please enter your details.</p>
+
+                <form asp-controller="Account" asp-action="Login" method="post" id="loginForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                    {
+                        <div class="login-error-alert">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span>@ViewData.ModelState[string.Empty]!.Errors[0].ErrorMessage</span>
+                        </div>
+                    }
+
+                    <!-- EMAIL FIELD -->
+                    <div class="mb-3">
+                        <label for="loginEmail" class="field-label">USERNAME OR EMAIL</label>
+                        <input type="text" 
+                               id="loginEmail" 
+                               name="email" 
+                               class="custom-input" 
+                               placeholder="admin or admin@vetcare.com" 
+                               required />
+                    </div>
+
+                    <!-- PASSWORD FIELD -->
+                    <div class="mb-3">
+                        <label for="loginPassword" class="field-label">PASSWORD</label>
+                        <div class="password-wrap">
+                            <input type="password" 
+                                   id="loginPassword" 
+                                   name="password" 
+                                   class="custom-input" 
+                                   placeholder="••••••••" 
+                                   required />
+                            <button type="button" class="eye-toggle-btn" id="togglePasswordBtn" aria-label="Toggle password">
+                                <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- REMEMBER ME & FORGOT PASSWORD -->
+                    <div class="form-options-row">
+                        <label class="d-flex align-items-center gap-2 cursor-pointer m-0">
+                            <input type="checkbox" name="rememberMe" value="true" checked class="remember-checkbox" />
+                            <span style="color: #475569;">Remember me</span>
+                        </label>
+                        <a href="#" class="forgot-pass-link" onclick="showToast('Password reset link dispatched to your email.'); return false;">Forgot password</a>
+                    </div>
+
+                    <!-- SIGN IN BUTTON -->
+                    <button type="submit" class="btn-signin-primary">
+                        Sign in
+                    </button>
+
+                    <!-- GOOGLE SIGN IN BUTTON -->
+                    <button type="button" class="btn-signin-google" onclick="showToast('Initiating Google Single Sign-On...'); return false;">
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                        Sign in with Google
+                    </button>
+                </form>
+            </div>
+
+            <!-- Footer Text -->
+            <div class="login-footer-text">
+                Don't have an account? <a href="#" class="signup-free-link" onclick="showToast('Redirecting to Registration...'); return false;">Sign up for free</a>
+            </div>
+        </div>
+
+        <div></div>
+    </div>
+
+    <!-- Right Panel: Hero Image & Overlay Badges -->
+    <div class="login-right-side">
+        <div class="dark-hero-overlay"></div>
+
+        <!-- Top Left Badges Stack -->
+        <div class="top-left-badges">
+            <div class="badge-pill-card">
+                <div class="icon-circle icon-circle-teal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </div>
+                <div>
+                    <div class="badge-main-text">4.9 / 5.0</div>
+                    <div class="badge-sub-text">Clinic rating</div>
+                </div>
+            </div>
+
+            <div class="badge-pill-card">
+                <div class="icon-circle icon-circle-purple">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <div class="badge-main-text">24 / 7</div>
+                    <div class="badge-sub-text">Always available</div>
+                </div>
+            </div>
+
+            <div class="badge-pill-card">
+                <div class="icon-circle icon-circle-cyan">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="badge-main-text">HIPAA Secure</div>
+                    <div class="badge-sub-text">Data protected</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Overlay Banner -->
+        <div class="bottom-teal-banner">
+            <div class="banner-brand-row">
+                <div class="banner-icon-box" style="background:#ffffff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center;">
+                    <img src="~/images/logo-mark.png" alt="" style="width:20px; height:20px; object-fit:contain;" />
+                </div>
+                <span class="banner-brand-name">VETCARE CONNECT</span>
+            </div>
+            <h2 class="banner-main-title">We love pets as much as you do.</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive JS Logic -->
+<script>
+    function showToast(message) {
+        let toast = document.getElementById('loginToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'loginToast';
+            toast.className = 'vc-toast';
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <span>${message}</span>`;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Password Visibility Toggle
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const passwordInput = document.getElementById('loginPassword');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (togglePasswordBtn && passwordInput && eyeIcon) {
+            togglePasswordBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+
+                if (isPassword) {
+                    eyeIcon.innerHTML = `
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    `;
+                } else {
+                    eyeIcon.innerHTML = `
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    `;
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

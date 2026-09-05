@@ -1,0 +1,60 @@
+@model IEnumerable<VetCare.Models.Report>
+@{
+    Layout = "_DashboardLayout";
+    var isAdmin = User.GetUserRole() == "Administrator";
+}
+
+<div class="filter-row">
+    <p class="page-note mb-0">Generate clinical, financial, or operational reports — each is saved to history.</p>
+    <a class="btn-vc ms-auto" asp-action="Generate">+ Generate report</a>
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">Report history (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Generated</th>
+                        <th>By</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td class="cell-strong">#RPT-@r.ReportID.ToString("D3")</td>
+                        <td>
+                            <span class="badge-vc @(r.ReportType == "Clinical" ? "b-info" : r.ReportType == "Financial" ? "b-paid" : "b-pending")">@r.ReportType</span>
+                        </td>
+                        <td class="cell-muted">@r.DateGenerated.ToString("MMM dd, yyyy h:mm tt")</td>
+                        <td>@r.Generator?.Name</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a class="btn-vc-outline btn-vc-sm" asp-action="Details" asp-route-id="@r.ReportID">View</a>
+                            @if (isAdmin)
+                            {
+                                <form asp-action="Delete" method="post" class="d-inline" data-confirm="Delete this report?">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@r.ReportID" />
+                                    <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No reports generated yet.</p></div>
+        }
+    </div>
+</div>

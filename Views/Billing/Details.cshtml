@@ -1,0 +1,84 @@
+@model VetCare.Models.Billing
+@{
+    Layout = "_DashboardLayout";
+    var role = User.GetUserRole();
+    var isOwner = role == "Pet Owner";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <div>
+                    <h3 class="vc-card-title">Invoice #INV-@Model.InvoiceID.ToString("D4")</h3>
+                    <div class="dash-title-sub">Issued @Model.DateIssued.ToString("MMMM dd, yyyy · h:mm tt")</div>
+                </div>
+                <partial name="_StatusBadge" model="Model.PaymentStatus" />
+            </div>
+            <div class="vc-card-body">
+                <div class="d-flex justify-content-between align-items-start mb-4 pb-3" style="border-bottom:1px solid var(--border-light);">
+                    <div>
+                        <div class="font-serif" style="font-weight:700; color:var(--primary); display:flex; align-items:center; gap:8px;">
+                            <img src="~/images/logo-mark.png" alt="" style="width:26px; height:26px; object-fit:contain;" />
+                            VetCare Connect
+                        </div>
+                        <div class="cell-muted" style="font-size:.8rem;">123 Vet Ave, Suite 500<br />San Francisco, CA 94102<br />support@vetcareconnect.com</div>
+                    </div>
+                    <div style="text-align:right; font-size:.88rem;">
+                        <div class="form-hint">BILLED TO</div>
+                        <div class="cell-strong">@Model.Owner?.Name</div>
+                        <div class="cell-muted">@Model.Owner?.Email</div>
+                        <div class="cell-muted">@Model.Owner?.ContactNumber</div>
+                    </div>
+                </div>
+
+                <table class="vc-table">
+                    <thead><tr><th>Description</th><th style="text-align:right;">Amount</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="cell-strong">@Model.Appointment?.ServiceType</div>
+                                <div class="cell-muted">Appointment #@Model.AppointmentID · @Model.Appointment?.AppointmentDate.ToString("MMM dd, yyyy") · Dr. @Model.Appointment?.Vet?.Name</div>
+                                <div class="cell-muted">Pet: @Model.Appointment?.Pet?.PetName (@Model.Appointment?.Pet?.Species)</div>
+                            </td>
+                            <td style="text-align:right;" class="cell-strong">@($"₱{Model.TotalAmount:N2}")</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:right;"><span class="cell-strong">Total</span></td>
+                            <td style="text-align:right;"><span class="stat-number" style="font-size:1.2rem;">@($"₱{Model.TotalAmount:N2}")</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+                    <div style="font-size:.9rem;">
+                        <span class="form-hint">PAYMENT METHOD</span> <span class="cell-strong">@Model.PaymentMethod</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        @if (Model.PaymentStatus == "Pending" && (isOwner || role is "Administrator" or "Clinic Staff"))
+                        {
+                            <form asp-action="MarkPaid" method="post" class="d-flex gap-2" id="payForm">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.InvoiceID" />
+                                @if (isOwner)
+                                {
+                                    <select name="paymentMethod" class="form-control-vc" style="width:auto;">
+                                        <option value="Cash">Cash (pay at clinic)</option>
+                                        <option value="Card">Card</option>
+                                        <option value="Online">Online</option>
+                                    </select>
+                                }
+                                <button class="btn-vc" type="submit">@(isOwner ? "Pay now" : "Mark as paid")</button>
+                            </form>
+                        }
+                        <a class="btn-vc-outline" asp-action="Index">Back to invoices</a>
+                    </div>
+                </div>
+                @if (isOwner && Model.PaymentStatus == "Pending")
+                {
+                    <p class="page-note mt-3 mb-0">Paying online settles your invoice immediately and awards loyalty points (1 point per ₱100).</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

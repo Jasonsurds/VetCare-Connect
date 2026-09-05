@@ -1,0 +1,83 @@
+@model IEnumerable<VetCare.Models.Pet>
+@{
+    Layout = "_DashboardLayout";
+    var isOwner = User.GetUserRole() == "Pet Owner";
+    var canManage = User.GetUserRole() is "Administrator" or "Clinic Staff";
+}
+
+<div class="filter-row">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control-vc" placeholder="Search pet name or species..." />
+        </div>
+        <button class="btn-vc-outline" type="submit">Search</button>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+        {
+            <a class="btn-vc-outline" asp-action="Index">Clear</a>
+        }
+    </form>
+    @if (canManage || isOwner)
+    {
+        <a class="btn-vc ms-auto" asp-action="Create">+ Add pet</a>
+    }
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">@(isOwner ? "My pets" : "All registered pets") (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Pet</th>
+                        <th>Species / Breed</th>
+                        <th>Age</th>
+                        @if (!isOwner)
+                        {
+                            <th>Owner</th>
+                        }
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var pet in Model)
+                {
+                    <tr>
+                        <td class="cell-strong">@pet.PetName</td>
+                        <td>@pet.Species <span class="cell-muted">· @(pet.Breed ?? "—")</span></td>
+                        <td>@pet.Age yr(s)</td>
+                        @if (!isOwner)
+                        {
+                            <td>@pet.Owner?.Name</td>
+                        }
+                        <td><span class="badge-vc b-ok">Active</span></td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a class="btn-vc-outline btn-vc-sm" asp-action="Details" asp-route-id="@pet.PetID">View</a>
+                            @if (canManage)
+                            {
+                                <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@pet.PetID">Edit</a>
+                                <form asp-action="Delete" method="post" class="d-inline" data-confirm="Delete pet '@pet.PetName'? This also removes its appointments and reminders.">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="8" r="2"></circle><path d="M12 11c-3 0-5.5 2.5-5.5 5.5S9 22 12 22s5.5-2.5 5.5-5.5S15 11 12 11z"></path></svg>
+                <p>No pets found@(isOwner ? " — add your first pet to get started." : ".")</p>
+            </div>
+        }
+    </div>
+</div>

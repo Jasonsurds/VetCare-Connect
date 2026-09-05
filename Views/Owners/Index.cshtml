@@ -1,0 +1,62 @@
+@model IEnumerable<VetCare.Controllers.OwnerListItem>
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="filter-row">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control-vc" placeholder="Search owner name or email..." />
+        </div>
+        <button class="btn-vc-outline" type="submit">Search</button>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+        {
+            <a class="btn-vc-outline" asp-action="Index">Clear</a>
+        }
+    </form>
+    <a class="btn-vc ms-auto" asp-action="Create">+ Register owner</a>
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">Pet owners (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Contact</th>
+                        <th>Pets</th>
+                        <th>Account</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var o in Model)
+                {
+                    <tr>
+                        <td class="cell-strong">@o.Name</td>
+                        <td>@(o.Email ?? "—")</td>
+                        <td>@(o.ContactNumber ?? "—")</td>
+                        <td><span class="badge-vc b-info">@o.PetCount pet(s)</span></td>
+                        <td><partial name="_StatusBadge" model='@(o.IsActive ? "Active" : "Inactive")' /></td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a class="btn-vc-outline btn-vc-sm" asp-action="Details" asp-route-id="@o.UserID">View</a>
+                            <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@o.UserID">Edit</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No pet owners registered yet.</p></div>
+        }
+    </div>
+</div>

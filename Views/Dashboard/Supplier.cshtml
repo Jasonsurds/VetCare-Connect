@@ -1,0 +1,71 @@
+@model VetCare.ViewModels.SupplierDashboardViewModel
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">Company profile</h3></div>
+            <div class="vc-card-body">
+                @if (Model.Supplier != null)
+                {
+                    <dl style="margin:0;">
+                        <dt style="font-size:.72rem; font-weight:800; text-transform:uppercase; color:var(--text-muted);">Supplier</dt>
+                        <dd class="cell-strong" style="font-size:1.05rem;">@Model.Supplier.SupplierName</dd>
+                        <dt style="font-size:.72rem; font-weight:800; text-transform:uppercase; color:var(--text-muted);">Contact</dt>
+                        <dd>@Model.Supplier.ContactInfo</dd>
+                        <dt style="font-size:.72rem; font-weight:800; text-transform:uppercase; color:var(--text-muted);">Contract</dt>
+                        <dd>@Model.Supplier.ContractDetails</dd>
+                    </dl>
+                    <a class="btn-vc-outline mt-2" asp-controller="Suppliers" asp-action="My">View full profile</a>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No supplier profile is linked to this account yet. Please contact the clinic administrator.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">My product catalog (@Model.CatalogItems.Count items)</h3>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.CatalogItems.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Status</th><th>Unit Price</th></tr></thead>
+                        <tbody>
+                        @foreach (var i in Model.CatalogItems)
+                        {
+                            <tr>
+                                <td class="cell-strong">@i.ItemName</td>
+                                <td>@i.Category</td>
+                                <td>@i.Quantity</td>
+                                <td>
+                                    @if (i.Quantity <= i.ReorderLevel)
+                                    {
+                                        <span class="badge-vc b-low">Reorder needed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-vc b-ok">In stock</span>
+                                    }
+                                </td>
+                                <td class="cell-strong">@($"₱{i.UnitPrice:N2}")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No catalog items are linked to your account yet.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

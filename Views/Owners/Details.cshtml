@@ -1,0 +1,110 @@
+@model VetCare.Models.User
+@{
+    Layout = "_DashboardLayout";
+    var totalPoints = Model.CrmRecords.Sum(c => c.LoyaltyPoints);
+    var unpaid = Model.Invoices.Where(b => b.PaymentStatus == "Pending").Sum(b => b.TotalAmount);
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="vc-card">
+            <div class="vc-card-body text-center">
+                <div class="side-avatar mx-auto mb-3" style="width:72px;height:72px;font-size:1.4rem;">👤</div>
+                <h3 class="vc-card-title" style="font-size:1.3rem;">@Model.Name</h3>
+                <span class="badge-vc @(Model.IsActive ? "b-active" : "b-inactive") mb-3">@(Model.IsActive ? "Active" : "Inactive")</span>
+                <div class="text-start" style="font-size:.88rem;">
+                    <p class="mb-2"><span class="cell-strong">Username:</span> @Model.UserName</p>
+                    <p class="mb-2"><span class="cell-strong">Email:</span> @(Model.Email ?? "—")</p>
+                    <p class="mb-2"><span class="cell-strong">Contact:</span> @(Model.ContactNumber ?? "—")</p>
+                    <p class="mb-2"><span class="cell-strong">Address:</span> @(Model.Address ?? "—")</p>
+                    <p class="mb-0"><span class="cell-strong">Member since:</span> @Model.CreatedDate.ToString("MMM dd, yyyy")</p>
+                </div>
+                <a class="btn-vc-outline mt-3" asp-action="Edit" asp-route-id="@Model.UserID">Edit profile</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="stat-grid cols-3">
+            <div class="stat-card">
+                <div class="stat-icon si-teal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="4" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="8" r="2"></circle><path d="M12 11c-3 0-5.5 2.5-5.5 5.5S9 22 12 22s5.5-2.5 5.5-5.5S15 11 12 11z"></path></svg></div>
+                <div><div class="stat-number">@Model.Pets.Count</div><div class="stat-label">Pets</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
+                <div><div class="stat-number">@totalPoints</div><div class="stat-label">Loyalty Points</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg></div>
+                <div><div class="stat-number">@($"₱{unpaid:N0}")</div><div class="stat-label">Unpaid Invoices</div></div>
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Pets (@Model.Pets.Count)</h3>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.Pets.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Pet</th><th>Species / Breed</th><th>Age</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var p in Model.Pets)
+                        {
+                            <tr>
+                                <td class="cell-strong">@p.PetName</td>
+                                <td>@p.Species <span class="cell-muted">· @(p.Breed ?? "—")</span></td>
+                                <td>@p.Age yr(s)</td>
+                                <td><a class="btn-vc-outline btn-vc-sm" asp-controller="Pets" asp-action="Details" asp-route-id="@p.PetID">View</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No pets registered for this owner.</p></div>
+                }
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">CRM history (@Model.CrmRecords.Count)</h3>
+                <a class="vc-card-link" asp-controller="Crm" asp-action="Create">+ Log interaction</a>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.CrmRecords.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Date</th><th>Interaction / Feedback</th><th>Points</th></tr></thead>
+                        <tbody>
+                        @foreach (var c in Model.CrmRecords.OrderByDescending(c => c.InteractionDate))
+                        {
+                            <tr>
+                                <td class="cell-muted">@c.InteractionDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(c.Interaction))
+                                    {
+                                        <div>@c.Interaction</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(c.Feedback))
+                                    {
+                                        <div class="cell-muted">“@c.Feedback”</div>
+                                    }
+                                </td>
+                                <td class="cell-strong">@c.LoyaltyPoints</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No CRM interactions logged.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,137 @@
+@model VetCare.ViewModels.StaffDashboardViewModel
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-icon si-teal">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <div><div class="stat-number">@Model.TodayAppointments.Count</div><div class="stat-label">Appointments Today</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon si-amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+        </div>
+        <div><div class="stat-number">@Model.PendingInvoices.Count</div><div class="stat-label">Invoices Awaiting Payment</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon si-purple">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        </div>
+        <div><div class="stat-number">@Model.TotalOwners</div><div class="stat-label">Registered Owners</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon si-red">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        </div>
+        <div><div class="stat-number">@Model.LowStockItems.Count</div><div class="stat-label">Items Low on Stock</div></div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h2 class="vc-card-title mb-0">Quick actions</h2>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn-vc" asp-controller="Appointments" asp-action="Create">+ New appointment</a>
+        <a class="btn-vc-outline" asp-controller="Pets" asp-action="Create">+ Register pet</a>
+        <a class="btn-vc-outline" asp-controller="Billing" asp-action="Create">+ Issue invoice</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Today's queue</h3>
+                <a class="vc-card-link" asp-controller="Appointments" asp-action="Index">Manage all →</a>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.TodayAppointments.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Time</th><th>Pet</th><th>Owner</th><th>Vet</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var a in Model.TodayAppointments)
+                        {
+                            <tr>
+                                <td class="cell-strong">@a.AppointmentDate.ToString("h:mm tt")</td>
+                                <td>@a.Pet?.PetName <span class="cell-muted">(@a.Pet?.Species)</span></td>
+                                <td>@a.Pet?.Owner?.Name</td>
+                                <td>@a.Vet?.Name</td>
+                                <td><partial name="_StatusBadge" model="a.Status" /></td>
+                                <td><a class="btn-vc-outline btn-vc-sm" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.AppointmentID">Open</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>No appointments scheduled for today.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Pending invoices</h3>
+                <a class="vc-card-link" asp-controller="Billing" asp-action="Index">Billing →</a>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.PendingInvoices.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Invoice</th><th>Owner</th><th>Amount</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var b in Model.PendingInvoices)
+                        {
+                            <tr>
+                                <td class="cell-strong">#INV-@b.InvoiceID.ToString("D4")</td>
+                                <td>@b.Owner?.Name</td>
+                                <td class="cell-strong">@($"₱{b.TotalAmount:N2}")</td>
+                                <td><a class="btn-vc btn-vc-sm" asp-controller="Billing" asp-action="Details" asp-route-id="@b.InvoiceID">Collect</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>All invoices are settled. 🎉</p></div>
+                }
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Reorder soon</h3>
+                <a class="vc-card-link" asp-controller="Inventory" asp-action="Index">Inventory →</a>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.LowStockItems.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Item</th><th>Stock</th><th>Supplier</th></tr></thead>
+                        <tbody>
+                        @foreach (var i in Model.LowStockItems)
+                        {
+                            <tr>
+                                <td class="cell-strong">@i.ItemName</td>
+                                <td><span class="badge-vc b-low">@i.Quantity left</span></td>
+                                <td class="cell-muted">@(i.Supplier?.SupplierName ?? "—")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state"><p>Stock levels are healthy.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

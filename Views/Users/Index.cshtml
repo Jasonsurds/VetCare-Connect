@@ -1,0 +1,69 @@
+@model IEnumerable<VetCare.Models.User>
+@{
+    Layout = "_DashboardLayout";
+    var roles = new[] { "All", "Administrator", "Veterinarian", "Clinic Staff", "Pet Owner", "Supplier" };
+    var currentRole = ViewBag.Role as string ?? "All";
+    var currentUserId = User.GetUserId();
+}
+
+<div class="filter-row">
+    <div class="d-flex gap-2 flex-wrap">
+        @foreach (var r in roles)
+        {
+            <a class="btn-vc-outline" style="@(currentRole == r ? "background:var(--primary,#0b5e52);color:#fff;border-color:#0b5e52;" : "")"
+               asp-action="Index" asp-route-role="@r" asp-route-search="@ViewBag.Search">@r</a>
+        }
+    </div>
+    <form method="get" class="d-flex gap-2 flex-wrap ms-auto">
+        <input type="hidden" name="role" value="@currentRole" />
+        <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control-vc" placeholder="Search name or username..." />
+        </div>
+        <button class="btn-vc-outline" type="submit">Search</button>
+    </form>
+    <a class="btn-vc" asp-action="Create">+ Create account</a>
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <h3 class="vc-card-title">User accounts (@Model.Count())</h3>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        <table class="vc-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td class="cell-strong">@u.Name</td>
+                    <td>@u.UserName</td>
+                    <td><span class="badge-vc b-info">@u.Role</span></td>
+                    <td class="cell-muted">@(u.Email ?? "—")</td>
+                    <td><partial name="_StatusBadge" model='@(u.IsActive ? "Active" : "Inactive")' /></td>
+                    <td style="text-align:right; white-space:nowrap;">
+                        <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@u.UserID">Edit</a>
+                        @if (u.UserID != currentUserId)
+                        {
+                            <form asp-action="ToggleActive" method="post" class="d-inline" data-confirm="@(u.IsActive ? "Deactivate" : "Activate") account '@u.UserName'?">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@u.UserID" />
+                                <button class="btn-vc-outline btn-vc-sm @(u.IsActive ? "btn-vc-danger" : "")" type="submit">@(u.IsActive ? "Deactivate" : "Activate")</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
