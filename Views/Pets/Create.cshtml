@@ -34,8 +34,10 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-vc" asp-for="Breed">Breed</label>
-                            <input asp-for="Breed" class="form-control-vc" placeholder="e.g. Golden Retriever" />
+                            <input asp-for="Breed" list="breedSuggestions" class="form-control-vc" placeholder="Start typing or pick from suggestions" />
+                            <div class="form-hint">Suggestions update based on species.</div>
                         </div>
+                        <datalist id="breedSuggestions"></datalist>
                         <div class="col-md-6">
                             <label class="form-label-vc" asp-for="Age">Age (years) *</label>
                             <input asp-for="Age" type="number" min="0" max="50" class="form-control-vc" />
@@ -54,6 +56,21 @@
                         <div class="col-12">
                             <label class="form-label-vc" asp-for="MedicalHistory">Medical history / notes</label>
                             <textarea asp-for="MedicalHistory" class="form-control-vc" placeholder="Vaccinations, allergies, past conditions..."></textarea>
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                <select id="quickNotesDropdown" class="form-control-vc" style="max-width: 340px;">
+                                    <option value="">— Select a quick note to add —</option>
+                                    <option value="Vaccinations up to date">Vaccinations up to date</option>
+                                    <option value="Fully dewormed">Fully dewormed</option>
+                                    <option value="No known allergies">No known allergies</option>
+                                    <option value="Spayed / neutered">Spayed / neutered</option>
+                                    <option value="On long-term medication">On long-term medication</option>
+                                    <option value="Previous surgery">Previous surgery</option>
+                                    <option value="Microchipped">Microchipped</option>
+                                    <option value="Special diet required">Special diet required</option>
+                                </select>
+                                <button type="button" id="btnAddQuickNote" class="btn-vc-outline btn-vc-sm" style="height: 44px; padding: 0 16px;">+ Add note</button>
+                            </div>
+                            <div class="form-hint">Select a common medical note from the dropdown to add it to the notes.</div>
                         </div>
                     </div>
 
@@ -66,3 +83,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_PetFormScripts")
+}

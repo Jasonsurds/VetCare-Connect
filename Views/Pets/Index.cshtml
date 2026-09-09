@@ -61,7 +61,10 @@
                             @if (canManage)
                             {
                                 <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@pet.PetID">Edit</a>
-                                <form asp-action="Delete" method="post" class="d-inline" data-confirm="Delete pet '@pet.PetName'? This also removes its appointments and reminders.">
+                            }
+                            @if (canManage || isOwner)
+                            {
+                                <form asp-action="Delete" method="post" class="d-inline" data-confirm="Delete pet '@pet.PetName'?">
                                     @Html.AntiForgeryToken()
                                     <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
                                 </form>

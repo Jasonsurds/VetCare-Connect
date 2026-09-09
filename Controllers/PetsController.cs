@@ -124,17 +124,27 @@ public class PetsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Administrator, Clinic Staff")]
+    [Authorize(Roles = "Administrator, Clinic Staff, Pet Owner")]
     public async Task<IActionResult> Delete(int id)
     {
-        var pet = await _db.Pets.FindAsync(id);
-        if (pet != null)
+        var pet = await _db.Pets
+            .Include(p => p.Appointments)
+            .FirstOrDefaultAsync(p => p.PetID == id);
+        if (pet == null) return NotFound();
+
+        if (User.GetUserRole() == "Pet Owner" && pet.OwnerID != User.GetUserId())
+            return Forbid();
+
+        if (pet.Appointments.Any())
         {
-            _db.Pets.Remove(pet);
-            await _db.SaveChangesAsync();
-            await _audit.LogAsync("Delete", "Pets", $"Deleted pet '{pet.PetName}' (ID {id}).");
-            TempData["SuccessMessage"] = $"Pet '{pet.PetName}' has been removed.";
+            TempData["ErrorMessage"] = $"Pet '{pet.PetName}' has appointment record(s) and cannot be deleted. Remove its appointments first.";
+            return RedirectToAction(nameof(Index));
         }
+
+        _db.Pets.Remove(pet);
+        await _db.SaveChangesAsync();
+        await _audit.LogAsync("Delete", "Pets", $"Deleted pet '{pet.PetName}' (ID {id}).");
+        TempData["SuccessMessage"] = $"Pet '{pet.PetName}' has been removed.";
         return RedirectToAction(nameof(Index));
     }
 

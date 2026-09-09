@@ -1,0 +1,57 @@
+<script>
+(function () {
+    var BREEDS = {
+        Dog: ["Labrador Retriever", "Golden Retriever", "German Shepherd", "French Bulldog", "Bulldog", "Poodle", "Beagle", "Rottweiler", "Yorkshire Terrier", "Dachshund", "Siberian Husky", "Shih Tzu", "Pomeranian", "Maltese", "Pug", "Pembroke Welsh Corgi", "Chihuahua", "Boxer", "Aspin (mixed breed)"],
+        Cat: ["Persian", "Siamese", "Maine Coon", "Ragdoll", "Bengal", "Sphynx", "British Shorthair", "Scottish Fold", "Abyssinian", "Russian Blue", "American Shorthair", "Siberian", "Oriental Shorthair", "Puspin (mixed breed)"],
+        Bird: ["Budgerigar (Parakeet)", "Cockatiel", "Lovebird", "Canary", "Parrot", "Finch", "Macaw", "Cockatoo", "Conure", "Dove"],
+        Rabbit: ["Holland Lop", "Netherland Dwarf", "Lionhead", "Flemish Giant", "Mini Rex", "Rex", "Angora", "Californian", "New Zealand", "Lop"],
+        Other: ["Other / mixed"]
+    };
+
+    var species = document.getElementById('Species');
+    var datalist = document.getElementById('breedSuggestions');
+
+    function renderBreeds(speciesName) {
+        if (!datalist) return;
+        datalist.innerHTML = '';
+        (BREEDS[speciesName] || []).forEach(function (breed) {
+            var opt = document.createElement('option');
+            opt.value = breed;
+            datalist.appendChild(opt);
+        });
+    }
+
+    if (species && datalist) {
+        species.addEventListener('change', function () { renderBreeds(species.value); });
+        renderBreeds(species.value);
+    }
+
+    var notes = document.getElementById('MedicalHistory');
+    var dropdown = document.getElementById('quickNotesDropdown');
+    var addBtn = document.getElementById('btnAddQuickNote');
+
+    function appendQuickNote(text) {
+        if (!notes || !text) return;
+        var lines = (notes.value || '').split(/\r?\n/).map(function (l) { return l.trim(); });
+        if (lines.indexOf(text) === -1) {
+            notes.value = notes.value && notes.value.trim().length > 0
+                ? notes.value.replace(/\s+$/, '') + '\n' + text 
+                : text;
+        }
+        notes.focus();
+        if (dropdown) dropdown.value = '';
+    }
+
+    if (dropdown) {
+        dropdown.addEventListener('change', function () {
+            appendQuickNote(this.value);
+        });
+    }
+
+    if (addBtn && dropdown) {
+        addBtn.addEventListener('click', function () {
+            appendQuickNote(dropdown.value);
+        });
+    }
+})();
+</script>

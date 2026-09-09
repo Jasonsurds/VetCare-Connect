@@ -14,11 +14,13 @@ public class BillingController : Controller
 {
     private readonly VetCareDbContext _db;
     private readonly IAuditService _audit;
+    private readonly INotificationService _notif;
 
-    public BillingController(VetCareDbContext db, IAuditService audit)
+    public BillingController(VetCareDbContext db, IAuditService audit, INotificationService notif)
     {
         _db = db;
         _audit = audit;
+        _notif = notif;
     }
 
     public async Task<IActionResult> Index(string? status)
@@ -103,6 +105,13 @@ public class BillingController : Controller
         _db.Billings.Add(invoice);
         await _db.SaveChangesAsync();
         await _audit.LogAsync("Create", "Billing", $"Invoice #INV-{invoice.InvoiceID:D4} issued for {invoice.TotalAmount:N2} (appointment #{appointmentId}).");
+
+        // Notify Owner
+        var invoiceUrl = $"/Billing/Details/{invoice.InvoiceID}";
+        await _notif.SendAsync(invoice.OwnerID, "New Invoice Issued 💳",
+            $"Invoice #INV-{invoice.InvoiceID:D4} for ₱{invoice.TotalAmount:N2} has been issued for {appointment.Pet?.PetName}'s appointment.",
+            "Billing", invoiceUrl);
+
         TempData["SuccessMessage"] = $"Invoice #INV-{invoice.InvoiceID:D4} has been issued.";
         return RedirectToAction(nameof(Details), new { id = invoice.InvoiceID });
     }
@@ -112,7 +121,9 @@ public class BillingController : Controller
     public async Task<IActionResult> MarkPaid(int id, string? paymentMethod)
     {
         var role = User.GetUserRole();
-        var invoice = await _db.Billings.FindAsync(id);
+        var invoice = await _db.Billings
+            .Include(b => b.Appointment).ThenInclude(a => a!.Pet)
+            .FirstOrDefaultAsync(b => b.InvoiceID == id);
         if (invoice == null) return NotFound();
 
         if (role != "Administrator" && role != "Clinic Staff")
@@ -142,6 +153,20 @@ public class BillingController : Controller
         }
 
         await _audit.LogAsync("Update", "Billing", $"Invoice #INV-{invoice.InvoiceID:D4} marked as Paid ({invoice.PaymentMethod}). {points} loyalty points awarded.");
+
+        // Dispatch notifications
+        var invoiceUrl = $"/Billing/Details/{invoice.InvoiceID}";
+        await _notif.SendAsync(invoice.OwnerID, "Payment Received! ✅",
+            $"Thank you! Your payment of ₱{invoice.TotalAmount:N2} for Invoice #INV-{invoice.InvoiceID:D4} has been confirmed. {(points > 0 ? $"+{points} loyalty points earned!" : "")}",
+            "Billing", invoiceUrl);
+
+        if (role == "Pet Owner")
+        {
+            await _notif.SendToRoleAsync("Clinic Staff", "Payment Settled by Owner",
+                $"Pet Owner paid Invoice #INV-{invoice.InvoiceID:D4} (₱{invoice.TotalAmount:N2}) via {invoice.PaymentMethod}.",
+                "Billing", invoiceUrl);
+        }
+
         TempData["SuccessMessage"] = $"Invoice #INV-{invoice.InvoiceID:D4} is now paid. {(points > 0 ? $"{points} loyalty points awarded!" : "")}";
         return RedirectToAction(nameof(Details), new { id });
     }

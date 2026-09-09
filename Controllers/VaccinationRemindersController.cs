@@ -14,11 +14,13 @@ public class VaccinationRemindersController : Controller
 {
     private readonly VetCareDbContext _db;
     private readonly IAuditService _audit;
+    private readonly INotificationService _notif;
 
-    public VaccinationRemindersController(VetCareDbContext db, IAuditService audit)
+    public VaccinationRemindersController(VetCareDbContext db, IAuditService audit, INotificationService notif)
     {
         _db = db;
         _audit = audit;
+        _notif = notif;
     }
 
     private bool CanManage => User.GetUserRole() is "Administrator" or "Clinic Staff" or "Veterinarian";
@@ -64,6 +66,15 @@ public class VaccinationRemindersController : Controller
         var reminder = new VaccinationReminder { PetID = petId, VaccineName = vaccineName, DueDate = dueDate, Status = "Pending" };
         _db.VaccinationReminders.Add(reminder);
         await _db.SaveChangesAsync();
+
+        var pet = await _db.Pets.FindAsync(petId);
+        if (pet != null)
+        {
+            await _notif.SendAsync(pet.OwnerID, "Upcoming Vaccination Scheduled 💉",
+                $"Vaccination reminder scheduled: '{pet.PetName}' is due for '{vaccineName}' on {dueDate:d}.",
+                "Reminder", "/VaccinationReminders");
+        }
+
         await _audit.LogAsync("Create", "VaccinationReminders", $"Reminder set: {vaccineName} for pet (ID {petId}) due {dueDate:d}.");
         TempData["SuccessMessage"] = $"Vaccination reminder for '{vaccineName}' has been scheduled. The owner will be notified.";
         return RedirectToAction(nameof(Index));
@@ -108,8 +119,16 @@ public class VaccinationRemindersController : Controller
 
         reminder.Status = "Sent";
         await _db.SaveChangesAsync();
+
+        if (reminder.Pet != null)
+        {
+            await _notif.SendAsync(reminder.Pet.OwnerID, "Vaccination Due Reminder 💉",
+                $"Notice: Your pet '{reminder.Pet.PetName}' is due for vaccination '{reminder.VaccineName}' on {reminder.DueDate:d}. Please book a visit soon.",
+                "Reminder", "/Appointments/Create");
+        }
+
         await _audit.LogAsync("Update", "VaccinationReminders", $"Reminder #{id} ({reminder.VaccineName}) sent to owner of '{reminder.Pet?.PetName}'.");
-        TempData["SuccessMessage"] = $"Reminder for '{reminder.VaccineName}' marked as sent to the owner.";
+        TempData["SuccessMessage"] = $"Reminder for '{reminder.VaccineName}' sent to the owner.";
         return RedirectToAction(nameof(Index));
     }
 

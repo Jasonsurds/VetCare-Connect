@@ -14,11 +14,13 @@ public class AppointmentsController : Controller
 {
     private readonly VetCareDbContext _db;
     private readonly IAuditService _audit;
+    private readonly INotificationService _notif;
 
-    public AppointmentsController(VetCareDbContext db, IAuditService audit)
+    public AppointmentsController(VetCareDbContext db, IAuditService audit, INotificationService notif)
     {
         _db = db;
         _audit = audit;
+        _notif = notif;
     }
 
     public static readonly string[] ServiceTypes =
@@ -139,6 +141,46 @@ public class AppointmentsController : Controller
         await _audit.LogAsync("Create", "Appointments",
             $"Appointment #{appointment.AppointmentID} booked for pet '{pet.PetName}' on {appointment.AppointmentDate:g}.");
 
+        // Dispatch Notifications
+        var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";
+        if (role == "Pet Owner")
+        {
+            // 1. Notify Staff and Admin of new booking suggestion from owner
+            await _notif.SendToRoleAsync("Clinic Staff", "New Appointment Request",
+                $"Pet Owner '{User.Identity?.Name}' requested a {serviceType} for '{pet.PetName}' on {appointment.AppointmentDate:g}.",
+                "Appointment", detailsUrl);
+            await _notif.SendToRoleAsync("Administrator", "New Appointment Request",
+                $"Pet Owner '{User.Identity?.Name}' requested a {serviceType} for '{pet.PetName}' on {appointment.AppointmentDate:g}.",
+                "Appointment", detailsUrl);
+
+            // 2. Notify assigned Vet
+            if (vetId > 0)
+            {
+                await _notif.SendAsync(vetId, "New Appointment Assigned",
+                    $"You have a new appointment booking for '{pet.PetName}' on {appointment.AppointmentDate:g}.",
+                    "Appointment", detailsUrl);
+            }
+
+            // 3. Confirm to Owner
+            await _notif.SendAsync(pet.OwnerID, "Appointment Request Submitted",
+                $"Your appointment request for '{pet.PetName}' on {appointment.AppointmentDate:g} has been submitted and is pending clinic confirmation.",
+                "Appointment", detailsUrl);
+        }
+        else
+        {
+            // Staff / Admin created appointment -> notify Owner and Vet
+            await _notif.SendAsync(pet.OwnerID, "New Appointment Scheduled",
+                $"An appointment for '{pet.PetName}' ({serviceType}) on {appointment.AppointmentDate:g} has been scheduled by the clinic.",
+                "Appointment", detailsUrl);
+
+            if (vetId > 0)
+            {
+                await _notif.SendAsync(vetId, "New Appointment Assigned",
+                    $"An appointment for '{pet.PetName}' on {appointment.AppointmentDate:g} has been scheduled.",
+                    "Appointment", detailsUrl);
+            }
+        }
+
         TempData["SuccessMessage"] = "Appointment booked! Our staff will confirm your visit shortly.";
         return RedirectToAction(nameof(Details), new { id = appointment.AppointmentID });
     }
@@ -189,7 +231,10 @@ public class AppointmentsController : Controller
     {
         if (User.GetUserRole() is not ("Administrator" or "Clinic Staff")) return Forbid();
 
-        var appointment = await _db.Appointments.FindAsync(id);
+        var appointment = await _db.Appointments
+            .Include(a => a.Pet)
+            .Include(a => a.Vet)
+            .FirstOrDefaultAsync(a => a.AppointmentID == id);
         if (appointment == null) return NotFound();
         if (appointment.Status != "Pending")
         {
@@ -200,7 +245,25 @@ public class AppointmentsController : Controller
         appointment.Status = "Confirmed";
         await _db.SaveChangesAsync();
         await _audit.LogAsync("Update", "Appointments", $"Appointment #{id} approved (pending → confirmed).");
-        TempData["SuccessMessage"] = $"Appointment #{id} has been approved. It can be marked completed after the visit.";
+
+        // Notify Owner that their appointment was accepted!
+        var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";
+        if (appointment.Pet != null)
+        {
+            await _notif.SendAsync(appointment.Pet.OwnerID, "Appointment Confirmed! 🎉",
+                $"Your appointment for '{appointment.Pet.PetName}' on {appointment.AppointmentDate:g} has been accepted and confirmed by the clinic.",
+                "Appointment", detailsUrl);
+        }
+
+        // Notify Vet
+        if (appointment.VetID > 0)
+        {
+            await _notif.SendAsync(appointment.VetID, "Appointment Confirmed",
+                $"Appointment for '{appointment.Pet?.PetName}' on {appointment.AppointmentDate:g} is confirmed.",
+                "Appointment", detailsUrl);
+        }
+
+        TempData["SuccessMessage"] = $"Appointment #{id} has been approved and the pet owner has been notified.";
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -211,6 +274,7 @@ public class AppointmentsController : Controller
         var role = User.GetUserRole();
         var appointment = await _db.Appointments
             .Include(a => a.Pet)
+            .Include(a => a.Vet)
             .FirstOrDefaultAsync(a => a.AppointmentID == id);
         if (appointment == null) return NotFound();
         if (role != "Administrator" && role != "Clinic Staff" && !(role == "Veterinarian" && appointment.VetID == User.GetUserId()))
@@ -238,6 +302,16 @@ public class AppointmentsController : Controller
         }
 
         await _audit.LogAsync("Update", "Appointments", $"Appointment #{id} marked as Completed. Bill forwarded to Billing.");
+
+        // Notify Owner
+        var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";
+        if (appointment.Pet != null)
+        {
+            await _notif.SendAsync(appointment.Pet.OwnerID, "Visit Completed 🐾",
+                $"Your pet '{appointment.Pet.PetName}' visit on {appointment.AppointmentDate:g} has been marked as completed. Treatment records and invoices are now available.",
+                "Appointment", detailsUrl);
+        }
+
         TempData["SuccessMessage"] = $"Appointment #{id} completed.{billNote} You can now add the treatment record.";
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -249,6 +323,7 @@ public class AppointmentsController : Controller
         var role = User.GetUserRole();
         var appointment = await _db.Appointments
             .Include(a => a.Pet)
+            .Include(a => a.Vet)
             .FirstOrDefaultAsync(a => a.AppointmentID == id);
         if (appointment == null) return NotFound();
         if (role != "Administrator" && role != "Clinic Staff" && !(role == "Pet Owner" && appointment.Pet!.OwnerID == User.GetUserId()))
@@ -257,6 +332,30 @@ public class AppointmentsController : Controller
         appointment.Status = "Cancelled";
         await _db.SaveChangesAsync();
         await _audit.LogAsync("Update", "Appointments", $"Appointment #{id} cancelled by {role}.");
+
+        var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";
+        if (role == "Pet Owner")
+        {
+            await _notif.SendToRoleAsync("Clinic Staff", "Appointment Cancelled by Owner",
+                $"Pet Owner '{User.Identity?.Name}' cancelled the appointment for '{appointment.Pet?.PetName}' on {appointment.AppointmentDate:g}.",
+                "Appointment", detailsUrl);
+            if (appointment.VetID > 0)
+            {
+                await _notif.SendAsync(appointment.VetID, "Appointment Cancelled",
+                    $"The appointment for '{appointment.Pet?.PetName}' on {appointment.AppointmentDate:g} was cancelled by the owner.",
+                    "Appointment", detailsUrl);
+            }
+        }
+        else
+        {
+            if (appointment.Pet != null)
+            {
+                await _notif.SendAsync(appointment.Pet.OwnerID, "Appointment Cancelled",
+                    $"Your appointment for '{appointment.Pet.PetName}' on {appointment.AppointmentDate:g} was cancelled by clinic staff.",
+                    "Appointment", detailsUrl);
+            }
+        }
+
         TempData["SuccessMessage"] = $"Appointment #{id} has been cancelled.";
         return RedirectToAction(nameof(Details), new { id });
     }

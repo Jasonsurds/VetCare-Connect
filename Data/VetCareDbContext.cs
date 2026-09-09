@@ -18,6 +18,7 @@ public class VetCareDbContext : DbContext
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -105,6 +106,15 @@ public class VetCareDbContext : DbContext
              .WithMany()
              .HasForeignKey(r => r.GeneratedBy)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Notification>(e =>
+        {
+            e.HasKey(n => n.NotificationID);
+            e.HasOne(n => n.User)
+             .WithMany()
+             .HasForeignKey(n => n.UserID)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
