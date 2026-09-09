@@ -67,6 +67,17 @@
                         <td><partial name="_StatusBadge" model="a.Status" /></td>
                         <td style="text-align:right; white-space:nowrap;">
                             <a class="btn-vc-outline btn-vc-sm" asp-action="Details" asp-route-id="@a.AppointmentID">Open</a>
+                            @if (role == "Pet Owner")
+                            {
+                                var confirmMsg = a.Status == "Completed"
+                                    ? "Delete this completed appointment? Its treatment record and invoice will also be removed. This cannot be undone."
+                                    : "Delete this appointment? This cannot be undone.";
+                                <form asp-action="Delete" method="post" class="d-inline" data-confirm="@confirmMsg">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@a.AppointmentID" />
+                                    <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit" title="Delete appointment">Delete</button>
+                                </form>
+                            }
                         </td>
                     </tr>
                 }

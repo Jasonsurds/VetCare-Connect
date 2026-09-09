@@ -5,6 +5,7 @@
     var canManage = role is "Administrator" or "Clinic Staff";
     var canComplete = canManage || (role == "Veterinarian" && Model.VetID == User.GetUserId());
     var canCancel = canManage || (role == "Pet Owner" && Model.Pet!.OwnerID == User.GetUserId() && (Model.Status == "Pending" || Model.Status == "Confirmed"));
+    var canDelete = role == "Administrator" || (role == "Pet Owner" && Model.Pet!.OwnerID == User.GetUserId());
 }
 
 <div class="row g-4">
@@ -69,9 +70,12 @@
                             <button class="btn-vc-outline btn-vc-danger" type="submit">Cancel appointment</button>
                         </form>
                     }
-                    @if (role == "Administrator")
+                    @if (canDelete)
                     {
-                        <form asp-action="Delete" method="post" class="d-inline" data-confirm="Permanently delete this appointment?">
+                        var deleteMsg = role == "Pet Owner" && Model.Status == "Completed"
+                            ? "Delete this completed appointment? Its treatment record and invoice will also be removed. This cannot be undone."
+                            : "Permanently delete this appointment?";
+                        <form asp-action="Delete" method="post" class="d-inline" data-confirm="@deleteMsg">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.AppointmentID" />
                             <button class="btn-vc-outline btn-vc-danger" type="submit">Delete</button>

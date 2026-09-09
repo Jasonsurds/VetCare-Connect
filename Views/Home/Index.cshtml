@@ -19,7 +19,7 @@
                 </p>
                 
                 <div class="hero-actions">
-                    <button class="btn-vc-primary open-appointment-modal">
+                    <a asp-controller="Appointments" asp-action="Create" class="btn-vc-primary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -27,7 +27,7 @@
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
                         Book an appointment
-                    </button>
+                    </a>
                     <a href="#features" class="btn-vc-outline">
                         Learn More 
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -93,7 +93,7 @@
                             </div>
 
                             <div class="doctor-quick-actions">
-                                <button class="btn-action-tag open-appointment-modal">Schedule Visit</button>
+                                <a asp-controller="Appointments" asp-action="Create" class="btn-action-tag">Schedule Visit</a>
                                 <button class="btn-action-tag" onclick="window.showToast('Connecting to Dr. Sarah Chen via Direct Chat...'); return false;">Direct Chat</button>
                                 <button class="btn-action-tag" onclick="window.showToast('Prescription refill module loaded'); return false;">Prescribe</button>
                             </div>

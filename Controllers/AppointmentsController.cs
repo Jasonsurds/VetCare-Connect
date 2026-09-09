@@ -263,17 +263,23 @@ public class AppointmentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> Delete(int id)
     {
-        var appointment = await _db.Appointments.FindAsync(id);
-        if (appointment != null)
-        {
-            _db.Appointments.Remove(appointment);
-            await _db.SaveChangesAsync();
-            await _audit.LogAsync("Delete", "Appointments", $"Appointment #{id} deleted.");
-            TempData["SuccessMessage"] = $"Appointment #{id} has been deleted.";
-        }
+        var role = User.GetUserRole();
+        var appointment = await _db.Appointments
+            .Include(a => a.Pet)
+            .FirstOrDefaultAsync(a => a.AppointmentID == id);
+        if (appointment == null) return NotFound();
+
+        // Owners may only delete appointments for their own pets; admins may delete any.
+        if (role != "Administrator" && !(role == "Pet Owner" && appointment.Pet!.OwnerID == User.GetUserId()))
+            return Forbid();
+
+        var summary = $"#{appointment.AppointmentID} ({appointment.ServiceType} for {appointment.Pet!.PetName}, {appointment.AppointmentDate:g})";
+        _db.Appointments.Remove(appointment);
+        await _db.SaveChangesAsync();
+        await _audit.LogAsync("Delete", "Appointments", $"Appointment {summary} deleted by {role}.");
+        TempData["SuccessMessage"] = $"Appointment #{id} has been deleted.";
         return RedirectToAction(nameof(Index));
     }
 
