@@ -85,6 +85,7 @@
         else
         {
             <div class="empty-state"><p>No inventory items found.</p></div>
+            @await Html.PartialAsync("_Pager")
         }
     </div>
 </div>

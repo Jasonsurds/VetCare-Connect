@@ -22,12 +22,14 @@ public class OwnersController : Controller
         _audit = audit;
     }
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
-        var query = _db.Users.Where(u => u.Role == "Pet Owner");
+        const int pageSize = 10;
+        var query = _db.Users.Where(u => u.Role == "Pet Owner").AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(u => u.Name.Contains(search) || u.Email!.Contains(search));
 
+        var total = await query.CountAsync();
         var owners = await query
             .Select(u => new OwnerListItem
             {
@@ -40,9 +42,14 @@ public class OwnersController : Controller
                 PetCount = u.Pets.Count
             })
             .OrderBy(u => u.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         ViewBag.Search = search;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+        ViewData["PagerParams"] = new Dictionary<string, object?> { ["search"] = search };
         ViewData["Title"] = "Pet Owners";
         ViewData["DashTitle"] = "Pet Owner Management";
         return View(owners);

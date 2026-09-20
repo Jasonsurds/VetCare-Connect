@@ -21,7 +21,7 @@ public class TreatmentRecordsController : Controller
         _audit = audit;
     }
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         var role = User.GetUserRole();
         var query = _db.TreatmentRecords
@@ -37,9 +37,18 @@ public class TreatmentRecordsController : Controller
                 t.Diagnosis.Contains(search) ||
                 (t.Prescription != null && t.Prescription.Contains(search)) ||
                 t.Appointment!.Pet!.PetName.Contains(search));
+        const int pageSize = 10;
+        var total = await query.CountAsync();
+        var records = await query
+            .OrderByDescending(t => t.TreatmentDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-        var records = await query.OrderByDescending(t => t.TreatmentDate).ToListAsync();
         ViewBag.Search = search;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+        ViewData["PagerParams"] = new Dictionary<string, object?> { ["search"] = search };
         ViewData["Title"] = "Treatment Records";
         ViewData["DashTitle"] = role == "Pet Owner" ? "My Pets' Treatments" : "Treatment Records";
         return View(records);

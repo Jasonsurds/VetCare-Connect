@@ -89,17 +89,30 @@ h1, h2, h3, h4, .font-serif {
 }
 
 .vc-nav-link {
-    font-weight: 500;
+    font-size: 0.88rem;
+    font-weight: 600;
     color: var(--text-secondary);
     text-decoration: none;
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: var(--radius-pill);
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-.vc-nav-link:hover, .vc-nav-link.active {
+.vc-nav-link:hover {
+    color: #ffffff;
+    background-color: var(--primary-mint);
+}
+
+/* Current page: clean green-text marker only (no stuck-looking pill) */
+.vc-nav-link.active {
     color: var(--primary);
-    background-color: var(--primary-light);
+    background-color: transparent;
+}
+
+/* Ensure the current page (Home) gets the same green pill on hover */
+.vc-nav-link.active:hover {
+    color: #ffffff;
+    background-color: var(--primary-mint);
 }
 
 /* Buttons */
@@ -155,8 +168,39 @@ h1, h2, h3, h4, .font-serif {
 }
 
 .btn-vc-ghost:hover {
-    color: var(--primary);
-    background: var(--primary-light);
+    color: #ffffff;
+    background-color: var(--primary);
+}
+
+/* Compact navbar buttons (Sign In / Get Started) */
+.vc-navbar .btn-vc-ghost,
+.vc-navbar .btn-vc-primary {
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    box-shadow: none;
+}
+
+.vc-navbar .btn-vc-ghost {
+    color: var(--text-primary);
+}
+
+.vc-navbar .btn-vc-ghost:hover {
+    color: #ffffff;
+    background-color: var(--primary-mint);
+}
+
+/* "Get Started" stays the clear primary action: green pill, white text */
+.vc-navbar .btn-vc-primary {
+    background-color: var(--primary);
+    color: #ffffff !important;
+}
+
+.vc-navbar .btn-vc-primary:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 4px 14px rgba(11, 94, 82, 0.25);
+    transform: translateY(-1px);
 }
 
 /* Category Badge */
@@ -890,6 +934,21 @@ h1, h2, h3, h4, .font-serif {
     }
     .portal-img-container {
         margin-top: 30px;
+    }
+}
+
+/* Compact, responsive header on tablets and phones */
+@media (max-width: 768px) {
+    .vc-navbar {
+        padding: 10px 0;
+    }
+    .vc-navbar .btn-vc-ghost,
+    .vc-navbar .btn-vc-primary {
+        padding: 7px 12px;
+        font-size: 0.82rem;
+    }
+    .vc-navbar .d-flex.align-items-center.gap-2 {
+        gap: 8px !important;
     }
 }
 

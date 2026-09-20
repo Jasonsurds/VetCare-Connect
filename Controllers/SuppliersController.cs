@@ -20,12 +20,20 @@ public class SuppliersController : Controller
         _audit = audit;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
+        const int pageSize = 10;
+        var total = await _db.Suppliers.CountAsync();
         var suppliers = await _db.Suppliers
             .Include(s => s.InventoryItems)
             .OrderBy(s => s.SupplierName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+        ViewData["PagerParams"] = new Dictionary<string, object?>();
         ViewData["Title"] = "Suppliers";
         ViewData["DashTitle"] = "Supplier Management";
         return View(suppliers);

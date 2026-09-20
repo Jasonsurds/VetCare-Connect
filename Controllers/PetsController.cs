@@ -24,8 +24,9 @@ public class PetsController : Controller
     private bool IsStaff =>
         User.GetUserRole() is "Administrator" or "Clinic Staff" or "Veterinarian";
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
+        const int pageSize = 10;
         var role = User.GetUserRole();
         var query = _db.Pets.Include(p => p.Owner).AsQueryable();
 
@@ -35,8 +36,18 @@ public class PetsController : Controller
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(p => p.PetName.Contains(search) || p.Species.Contains(search));
 
-        var pets = await query.OrderBy(p => p.PetName).ToListAsync();
+        var total = await query.CountAsync();
+        var pets = await query
+            .OrderBy(p => p.PetName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
         ViewBag.Search = search;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+        ViewData["PagerParams"] = new Dictionary<string, object?> { ["search"] = search };
+
         ViewData["Title"] = "Pets";
         ViewData["DashTitle"] = role == "Pet Owner" ? "My Pets" : "Pet Records";
         return View(pets);

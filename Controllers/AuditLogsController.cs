@@ -14,7 +14,7 @@ public class AuditLogsController : Controller
 
     public async Task<IActionResult> Index(string? actionType, int page = 1)
     {
-        const int pageSize = 25;
+        const int pageSize = 10;
         var query = _db.AuditLogs.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(actionType) && actionType != "All")

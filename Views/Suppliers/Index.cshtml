@@ -47,5 +47,7 @@
 </div>
 @if (!Model.Any())
 {
-    <div class="vc-card"><div class="empty-state"><p>No suppliers registered yet.</p></div></div>
+    <div class="vc-card"><div class="empty-state"><p>No suppliers registered yet.</p></div>
+    @await Html.PartialAsync("_Pager")
+    </div>
 }

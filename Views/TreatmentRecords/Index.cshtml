@@ -70,6 +70,7 @@
         else
         {
             <div class="empty-state"><p>No treatment records found.</p></div>
+            @await Html.PartialAsync("_Pager")
         }
     </div>
 </div>

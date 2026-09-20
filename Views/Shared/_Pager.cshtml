@@ -1,0 +1,59 @@
+@{
+    var page = (int)(ViewBag.Page ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+
+    // Preserve the current filters (search/status/filter) from ViewData so the
+    // numbered page links don't drop them. asp-all-route-data needs <string,string>.
+    var route = new Dictionary<string, string>();
+    if (ViewData["PagerParams"] is Dictionary<string, object?> raw)
+    {
+        foreach (var kv in raw)
+        {
+            if (kv.Value != null)
+                route[kv.Key] = kv.Value?.ToString() ?? "";
+        }
+    }
+
+    // Numbered window: always the first & last page, plus a 1-page radius either
+    // side of the current page; anything more than a gap of 1 becomes an ellipsis.
+    var pages = new SortedSet<int> { 1 };
+    if (totalPages > 1) pages.Add(totalPages);
+    for (var p = Math.Max(1, page - 1); p <= Math.Min(totalPages, page + 1); p++)
+        pages.Add(p);
+}
+
+@if (totalPages > 1)
+{
+    <nav class="pager-vc" aria-label="Pagination">
+        @if (page > 1)
+        {
+            <a class="btn-vc-outline btn-vc-sm pager-btn" asp-all-route-data="route" asp-route-page="@(page - 1)" title="Previous page">&lsaquo;</a>
+        }
+
+        @{
+            int? prev = null;
+        }
+        @foreach (var p in pages)
+        {
+            @if (prev.HasValue && p - prev.Value > 1)
+            {
+                <span class="pager-omit">&hellip;</span>
+            }
+            prev = p;
+
+            @if (p == page)
+            {
+                <span class="btn-vc btn-vc-sm pager-btn" aria-current="page">@p</span>
+            }
+            else
+            {
+                <a class="btn-vc-outline btn-vc-sm pager-btn" asp-all-route-data="route" asp-route-page="@p">@p</a>
+            }
+        }
+
+        @if (page < totalPages)
+        {
+            <a class="btn-vc-outline btn-vc-sm pager-btn" asp-all-route-data="route" asp-route-page="@(page + 1)" title="Next page">&rsaquo;</a>
+        }
+    </nav>
+}

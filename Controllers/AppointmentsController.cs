@@ -26,7 +26,7 @@ public class AppointmentsController : Controller
     public static readonly string[] ServiceTypes =
         { "General Checkup", "Vaccination", "Dental Cleaning", "Grooming", "Follow-up", "Surgery Consult" };
 
-    public async Task<IActionResult> Index(string? status, string? search)
+    public async Task<IActionResult> Index(string? status, string? search, int page = 1)
     {
         var role = User.GetUserRole();
         var query = _db.Appointments
@@ -45,10 +45,18 @@ public class AppointmentsController : Controller
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(a => a.Pet!.PetName.Contains(search) || a.Vet!.Name.Contains(search));
 
-        var appointments = await query.OrderByDescending(a => a.AppointmentDate).ToListAsync();
+        var total = await query.CountAsync();
+        var appointments = await query
+            .OrderByDescending(a => a.AppointmentDate)
+            .Skip((page - 1) * 10)
+            .Take(10)
+            .ToListAsync();
 
         ViewBag.Status = status;
         ViewBag.Search = search;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / 10.0);
+        ViewData["PagerParams"] = new Dictionary<string, object?> { ["status"] = status, ["search"] = search };
         ViewBag.ServiceTypes = ServiceTypes;
         ViewData["Title"] = "Appointments";
         ViewData["DashTitle"] = role == "Veterinarian" ? "My Schedule" : role == "Pet Owner" ? "My Appointments" : "Appointment Scheduling";

@@ -23,9 +23,9 @@ public class InventoryController : Controller
 
     private bool CanManage => User.GetUserRole() is "Administrator" or "Clinic Staff";
 
-    public async Task<IActionResult> Index(string? search, string? filter)
+    public async Task<IActionResult> Index(string? search, string? filter, int page = 1)
     {
-        var role = User.GetUserRole();
+        const int pageSize = 10;        var role = User.GetUserRole();
         var query = _db.InventoryItems.Include(i => i.Supplier).AsQueryable();
 
         if (role == "Supplier")
@@ -40,9 +40,18 @@ public class InventoryController : Controller
         if (filter == "low")
             query = query.Where(i => i.Quantity <= i.ReorderLevel);
 
-        var items = await query.OrderBy(i => i.ItemName).ToListAsync();
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderBy(i => i.ItemName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
         ViewBag.Search = search;
         ViewBag.Filter = filter;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+        ViewData["PagerParams"] = new Dictionary<string, object?> { ["search"] = search, ["filter"] = filter };
         ViewData["Title"] = "Medicine Inventory";
         ViewData["DashTitle"] = role == "Supplier" ? "My Catalog" : "Medicine Inventory";
         return View(items);

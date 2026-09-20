@@ -310,26 +310,27 @@
 }
 
 .btn-site-link {
-    background: #ffffff;
-    color: #084338;
+    background: var(--dash-sidebar-bg, #084338);
+    color: #ffffff;
     font-weight: 600;
     font-size: 0.84rem;
     text-decoration: none;
-    padding: 8px 16px;
+    padding: 10px 16px;
     border-radius: var(--radius-pill);
-    border: 1px solid #cbe2dc;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    border: 1px solid #084338;
+    box-shadow: 0 4px 12px rgba(8, 67, 56, 0.2);
     display: inline-flex;
     align-items: center;
     gap: 6px;
     transition: all 0.2s ease;
     white-space: nowrap;
+    height: 42px;
 }
 
 .btn-site-link:hover {
-    background: #e2f2ee;
-    border-color: #a7cfc5;
-    color: #084338;
+    background: #063730;
+    border-color: #063730;
+    color: #ffffff;
     transform: translateY(-1px);
 }
 
@@ -791,21 +792,21 @@ textarea.form-control-vc { height: auto; min-height: 90px; resize: vertical; }
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: #ffffff;
+    background: var(--dash-sidebar-bg, #084338);
     border: 1px solid rgba(8, 67, 56, 0.08);
-    color: #084338;
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
 }
 
 .btn-notif-bell:hover {
-    background: #e4f3ef;
-    border-color: #bfe3db;
-    color: #084338;
+    background: #063730;
+    border-color: #063730;
+    color: #ffffff;
     transform: translateY(-1px);
 }
 
@@ -971,3 +972,16 @@ textarea.form-control-vc { height: auto; min-height: 90px; resize: vertical; }
     .dash-content { padding: 16px 16px 40px; }
     .dash-topbar { padding: 16px 18px 10px; }
 }
+
+/* Numbered pager (Pets, Owners, Appointments, Inventory, Billing, Suppliers, Treatment Records) */
+.pager-vc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 14px 0;
+    flex-wrap: wrap;
+}
+
+.pager-page { min-width: 34px; text-align: center; }
+.pager-omit { color: var(--text-muted, #8aa09b); padding: 0 2px; user-select: none; }

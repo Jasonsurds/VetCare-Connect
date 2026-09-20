@@ -23,8 +23,9 @@ public class BillingController : Controller
         _notif = notif;
     }
 
-    public async Task<IActionResult> Index(string? status)
+    public async Task<IActionResult> Index(string? status, int page = 1)
     {
+        const int pageSize = 10;
         var role = User.GetUserRole();
         var query = _db.Billings
             .Include(b => b.Owner)
@@ -37,9 +38,17 @@ public class BillingController : Controller
         if (!string.IsNullOrWhiteSpace(status) && status != "All")
             query = query.Where(b => b.PaymentStatus == status);
 
-        var invoices = await query.OrderByDescending(b => b.DateIssued).ToListAsync();
+        var total = await query.CountAsync();
+        var invoices = await query
+            .OrderByDescending(b => b.DateIssued)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
         ViewBag.Status = status;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+        ViewData["PagerParams"] = new Dictionary<string, object?> { ["status"] = status };
         ViewData["Title"] = "Billing";
         ViewData["DashTitle"] = role == "Pet Owner" ? "My Invoices" : "Billing & Payments";
         return View(invoices);
