@@ -285,7 +285,7 @@ public class AppointmentsController : Controller
             .Include(a => a.Vet)
             .FirstOrDefaultAsync(a => a.AppointmentID == id);
         if (appointment == null) return NotFound();
-        if (role != "Administrator" && role != "Clinic Staff" && !(role == "Veterinarian" && appointment.VetID == User.GetUserId()))
+        if (role != "Veterinarian" || appointment.VetID != User.GetUserId())
             return Forbid();
 
         appointment.Status = "Completed";

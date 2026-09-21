@@ -3,7 +3,7 @@
     Layout = "_DashboardLayout";
     var role = User.GetUserRole();
     var canManage = role is "Administrator" or "Clinic Staff";
-    var canComplete = canManage || (role == "Veterinarian" && Model.VetID == User.GetUserId());
+    var canComplete = role == "Veterinarian" && Model.VetID == User.GetUserId();
     var canCancel = canManage || (role == "Pet Owner" && Model.Pet!.OwnerID == User.GetUserId() && (Model.Status == "Pending" || Model.Status == "Confirmed"));
     var canDelete = role == "Administrator" || (role == "Pet Owner" && Model.Pet!.OwnerID == User.GetUserId());
 }
