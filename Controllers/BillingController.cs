@@ -127,22 +127,16 @@ public class BillingController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator, Clinic Staff")]
     public async Task<IActionResult> MarkPaid(int id, string? paymentMethod)
     {
-        var role = User.GetUserRole();
         var invoice = await _db.Billings
             .Include(b => b.Appointment).ThenInclude(a => a!.Pet)
             .FirstOrDefaultAsync(b => b.InvoiceID == id);
         if (invoice == null) return NotFound();
 
-        if (role != "Administrator" && role != "Clinic Staff")
-        {
-            if (role != "Pet Owner" || invoice.OwnerID != User.GetUserId())
-                return Forbid();
-            // Owners settling their own invoice always use their selected method.
-            if (!string.IsNullOrWhiteSpace(paymentMethod))
-                invoice.PaymentMethod = paymentMethod;
-        }
+        if (!string.IsNullOrWhiteSpace(paymentMethod))
+            invoice.PaymentMethod = paymentMethod;
 
         invoice.PaymentStatus = "Paid";
         await _db.SaveChangesAsync();
@@ -168,13 +162,6 @@ public class BillingController : Controller
         await _notif.SendAsync(invoice.OwnerID, "Payment Received! ✅",
             $"Thank you! Your payment of ₱{invoice.TotalAmount:N2} for Invoice #INV-{invoice.InvoiceID:D4} has been confirmed. {(points > 0 ? $"+{points} loyalty points earned!" : "")}",
             "Billing", invoiceUrl);
-
-        if (role == "Pet Owner")
-        {
-            await _notif.SendToRoleAsync("Clinic Staff", "Payment Settled by Owner",
-                $"Pet Owner paid Invoice #INV-{invoice.InvoiceID:D4} (₱{invoice.TotalAmount:N2}) via {invoice.PaymentMethod}.",
-                "Billing", invoiceUrl);
-        }
 
         TempData["SuccessMessage"] = $"Invoice #INV-{invoice.InvoiceID:D4} is now paid. {(points > 0 ? $"{points} loyalty points awarded!" : "")}";
         return RedirectToAction(nameof(Details), new { id });

@@ -634,6 +634,14 @@
     color: var(--vc-teal) !important;
 }
 
+.btn-vc-outline.active,
+.btn-vc-outline.active:hover {
+    background: var(--vc-mint);
+    border-color: var(--vc-mint);
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(35, 158, 133, 0.3);
+}
+
 .btn-vc-danger {
     background: #fff;
     color: #b91c1c !important;

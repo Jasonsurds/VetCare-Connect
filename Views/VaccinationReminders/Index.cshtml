@@ -27,11 +27,11 @@
                         <th>Vaccine</th>
                         <th>Due date</th>
                         <th>Countdown</th>
-                        <th>Status</th>
                         @if (canManage)
                         {
-                            <th style="text-align:right;">Actions</th>
+                            <th>Status</th>
                         }
+                        <th style="text-align:right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,13 +43,13 @@
                         <td>@r.VaccineName</td>
                         <td>@r.DueDate.ToString("MMM dd, yyyy")</td>
                         <td>
-                            @if (r.Status == "Sent")
-                            {
-                                <span class="cell-muted">—</span>
-                            }
-                            else if (days < 0)
+                            @if (days < 0)
                             {
                                 <span class="badge-vc b-low">@(-days) day(s) overdue</span>
+                            }
+                            else if (days == 0)
+                            {
+                                <span class="badge-vc b-pending">due today</span>
                             }
                             else if (days <= 7)
                             {
@@ -60,10 +60,14 @@
                                 <span class="cell-muted">in @days days</span>
                             }
                         </td>
-                        <td><partial name="_StatusBadge" model="r.Status" /></td>
                         @if (canManage)
                         {
-                            <td style="text-align:right; white-space:nowrap;">
+                            <td><partial name="_StatusBadge" model="r.Status" /></td>
+                        }
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a class="btn-vc btn-vc-sm" asp-action="Details" asp-route-id="@r.ReminderID">View details</a>
+                            @if (canManage)
+                            {
                                 @if (r.Status == "Pending")
                                 {
                                     <form asp-action="MarkSent" method="post" class="d-inline">
@@ -77,8 +81,8 @@
                                     @Html.AntiForgeryToken()
                                     <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
                                 </form>
-                            </td>
-                        }
+                            }
+                        </td>
                     </tr>
                 }
                 </tbody>

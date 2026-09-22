@@ -17,13 +17,13 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label-vc">Pet *</label>
-                            <select name="petId" class="form-control-vc" asp-items="ViewBag.PetID" required>
+                            <select id="petId" name="petId" class="form-control-vc" asp-items="ViewBag.PetID" required>
                                 <option value="">— Select pet —</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-vc">Veterinarian *</label>
-                            <select name="vetId" class="form-control-vc" asp-items="ViewBag.VetID" required>
+                            <select id="vetId" name="vetId" class="form-control-vc" asp-items="ViewBag.VetID" required>
                                 <option value="">— Select veterinarian —</option>
                             </select>
                         </div>
@@ -38,8 +38,15 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-vc">Preferred date &amp; time *</label>
-                            <input name="appointmentDate" type="datetime-local" class="form-control-vc" required />
+                            <input type="date" id="appDate" class="form-control-vc" required />
+                            <input type="hidden" id="appointmentDate" name="appointmentDate" />
+                            <div id="selTime" class="form-hint mt-1 d-none">Selected time: <span class="cell-strong" style="font-weight:800;"></span></div>
                             <div class="form-hint">Clinic hours: 8:00 AM – 6:00 PM daily.</div>
+                        </div>
+                        <div class="col-12 d-none" id="slotArea">
+                            <div class="form-hint mb-2">Available times for this veterinarian</div>
+                            <div id="slotGrid" class="d-flex flex-wrap gap-2"></div>
+                            <p id="slotMsg" class="page-note mt-2 mb-0 d-none"></p>
                         </div>
                         <div class="col-12">
                             <label class="form-label-vc">Notes / concerns</label>
@@ -55,3 +62,94 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    const vetSel = document.getElementById('vetId');
+    const dateInput = document.getElementById('appDate');
+    const hidden = document.getElementById('appointmentDate');
+    const slotArea = document.getElementById('slotArea');
+    const slotGrid = document.getElementById('slotGrid');
+    const slotMsg = document.getElementById('slotMsg');
+    const selTime = document.getElementById('selTime');
+
+    function fmt(d) {
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + m + '-' + day;
+    }
+
+    const today = new Date();
+    dateInput.min = fmt(today);
+    const max = new Date(today);
+    max.setDate(max.getDate() + 30);
+    dateInput.max = fmt(max);
+
+    // Open the native calendar popup when the box is clicked/focused.
+    function openCalendar() {
+        if (typeof dateInput.showPicker === 'function') {
+            try { dateInput.showPicker(); } catch (e) { /* not visible yet — ignore */ }
+        }
+    }
+    dateInput.addEventListener('click', openCalendar);
+    dateInput.addEventListener('focus', openCalendar);
+
+    function clearSlots(message) {
+        slotGrid.innerHTML = '';
+        slotGrid.querySelectorAll('.active').forEach(function (x) { x.classList.remove('active'); });
+        hidden.value = '';
+        if (selTime) { selTime.classList.add('d-none'); }
+        slotArea.classList.remove('d-none');
+        if (message) {
+            slotMsg.classList.remove('d-none');
+            slotMsg.textContent = message;
+        } else {
+            slotMsg.classList.add('d-none');
+        }
+    }
+
+    async function loadSlots() {
+        const vet = vetSel.value;
+        const d = dateInput.value;
+
+        if (!vet && !d) { slotArea.classList.add('d-none'); hidden.value = ''; return; }
+        if (!vet) { clearSlots('Select a veterinarian first, then pick a date to see the open times.'); return; }
+        if (!d) { clearSlots('Pick a date above — its available times will appear here.'); return; }
+
+        let json = [];
+        try {
+            const res = await fetch('/Appointments/AvailableSlots?vetId=' + encodeURIComponent(vet) + '&date=' + encodeURIComponent(d));
+            json = await res.json();
+        } catch (e) { return; }
+
+        clearSlots();
+
+        if (!json.length) {
+            slotMsg.classList.remove('d-none');
+            slotMsg.textContent = 'No open slots for this date. Please pick another day.';
+            return;
+        }
+
+        json.forEach(function (slot) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn-vc-outline btn-vc-sm';
+            b.textContent = slot.label;
+            b.addEventListener('click', function () {
+                slotGrid.querySelectorAll('.active').forEach(function (x) { x.classList.remove('active'); });
+                b.classList.add('active');
+                hidden.value = d + 'T' + slot.value;
+                if (selTime) {
+                    selTime.querySelector('span').textContent = b.textContent + ' — ' + new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                    selTime.classList.remove('d-none');
+                }
+            });
+            slotGrid.appendChild(b);
+        });
+    }
+
+    vetSel.addEventListener('change', function () { hidden.value = ''; loadSlots(); });
+    dateInput.addEventListener('change', loadSlots);
+    dateInput.addEventListener('input', loadSlots);
+})();
+</script>

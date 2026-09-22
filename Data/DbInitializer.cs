@@ -38,6 +38,7 @@ public static class DbInitializer
 
         Seed(context);
         SeedNotifications(context);
+        SeedInventory(context);
     }
 
     private static void Seed(VetCareDbContext context)
@@ -158,6 +159,33 @@ public static class DbInitializer
         }
 
         context.SaveChanges();
+    }
+
+    private static void SeedInventory(VetCareDbContext context)
+    {
+        if (context.InventoryItems.Any()) return;
+
+        context.InventoryItems.AddRange(
+            NewInventoryItem("Amoxicillin", "Antibiotic", 50, 35.00m, 10),
+            NewInventoryItem("Enrofloxacin", "Antibiotic", 40, 60.00m, 10),
+            NewInventoryItem("Ivermectin", "Antiparasitic", 30, 45.00m, 8),
+            NewInventoryItem("Doxycycline", "Antibiotic", 45, 55.00m, 10),
+            NewInventoryItem("Vaccines", "Vaccine", 25, 150.00m, 5));
+
+        context.SaveChanges();
+    }
+
+    private static InventoryItem NewInventoryItem(string itemName, string category, int quantity, decimal unitPrice, int reorderLevel)
+    {
+        return new InventoryItem
+        {
+            ItemName = itemName,
+            Category = category,
+            Quantity = quantity,
+            UnitPrice = unitPrice,
+            ReorderLevel = reorderLevel,
+            LastUpdated = DateTime.Now
+        };
     }
 
     private static User NewUser(string role, string name, string userName, string password, string email, string? contact = null, string? address = null)

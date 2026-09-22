@@ -3,6 +3,7 @@
     Layout = "_DashboardLayout";
     var canManage = User.GetUserRole() is "Administrator" or "Clinic Staff";
     var canBook = User.GetUserRole() == "Pet Owner";
+    var today = DateTime.Today;
 }
 
 <div class="row g-4">
@@ -82,14 +83,32 @@
                 @if (Model.VaccinationReminders.Any())
                 {
                     <table class="vc-table">
-                        <thead><tr><th>Vaccine</th><th>Due date</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Vaccine</th><th>Due date</th><th>Days left</th></tr></thead>
                         <tbody>
                         @foreach (var r in Model.VaccinationReminders.OrderByDescending(r => r.DueDate))
                         {
+                            var vDays = (r.DueDate.Date - today).Days;
                             <tr>
                                 <td class="cell-strong">@r.VaccineName</td>
                                 <td>@r.DueDate.ToString("MMM dd, yyyy")</td>
-                                <td><partial name="_StatusBadge" model="r.Status" /></td>
+                                <td>
+                                    @if (vDays < 0)
+                                    {
+                                        <span class="badge-vc b-low">@(-vDays) day(s) overdue</span>
+                                    }
+                                    else if (vDays == 0)
+                                    {
+                                        <span class="badge-vc b-pending">due today</span>
+                                    }
+                                    else if (vDays <= 7)
+                                    {
+                                        <span class="badge-vc b-pending">in @vDays day(s)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cell-muted">in @vDays days</span>
+                                    }
+                                </td>
                             </tr>
                         }
                         </tbody>

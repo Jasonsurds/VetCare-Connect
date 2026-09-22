@@ -128,7 +128,7 @@
                                     <div class="cell-muted">@b.Appointment?.Pet?.PetName · @b.DateIssued.ToString("MMM dd")</div>
                                 </td>
                                 <td class="cell-strong">@($"₱{b.TotalAmount:N2}")</td>
-                                <td><a class="btn-vc btn-vc-sm" asp-controller="Billing" asp-action="Details" asp-route-id="@b.InvoiceID">Pay now</a></td>
+                                <td><a class="btn-vc btn-vc-sm" asp-controller="Billing" asp-action="Details" asp-route-id="@b.InvoiceID">View</a></td>
                             </tr>
                         }
                         </tbody>

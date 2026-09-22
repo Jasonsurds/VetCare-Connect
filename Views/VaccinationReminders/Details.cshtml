@@ -1,0 +1,69 @@
+@model VetCare.Models.VaccinationReminder
+@{
+    Layout = "_DashboardLayout";
+    var canManage = User.GetUserRole() is "Administrator" or "Clinic Staff" or "Veterinarian";
+    var days = (Model.DueDate.Date - DateTime.Today).Days;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Vaccination reminder</h3>
+                <partial name="_StatusBadge" model="Model.Status" />
+            </div>
+            <div class="vc-card-body">
+                <div class="row g-3" style="font-size:.92rem;">
+                    <div class="col-md-6">
+                        <div class="form-hint">PET</div>
+                        <div class="cell-strong">@Model.Pet?.PetName (@Model.Pet?.Species)</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-hint">OWNER</div>
+                        <div class="cell-strong">@Model.Pet?.Owner?.Name</div>
+                        <div class="cell-muted">@(Model.Pet?.Owner?.ContactNumber ?? "—")</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-hint">VACCINE</div>
+                        <div class="cell-strong">@Model.VaccineName</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-hint">DUE DATE</div>
+                        <div class="cell-strong">@Model.DueDate.ToString("dddd, MMM dd, yyyy")</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-hint">DAYS LEFT</div>
+                        @if (days < 0)
+                        {
+                            <span class="badge-vc b-low">@(-days) day(s) overdue</span>
+                        }
+                        else if (days == 0)
+                        {
+                            <span class="badge-vc b-pending">due today</span>
+                        }
+                        else if (days <= 7)
+                        {
+                            <span class="badge-vc b-pending">in @days day(s)</span>
+                        }
+                        else
+                        {
+                            <span class="cell-muted">in @days days</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4 flex-wrap">
+                    @if (User.GetUserRole() == "Pet Owner")
+                    {
+                        <a class="btn-vc" asp-controller="Appointments" asp-action="Create" asp-route-petId="@Model.PetID">Book a visit</a>
+                    }
+                    @if (canManage)
+                    {
+                        <a class="btn-vc-outline" asp-action="Edit" asp-route-id="@Model.ReminderID">Edit</a>
+                    }
+                    <a class="btn-vc-outline" asp-action="Index">Back to reminders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -193,6 +193,28 @@ public class AppointmentsController : Controller
         return RedirectToAction(nameof(Details), new { id = appointment.AppointmentID });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> AvailableSlots(int vetId, DateTime date)
+    {
+        var day = date.Date;
+        var booked = await _db.Appointments
+            .Where(a => a.VetID == vetId && a.Status != "Cancelled" && a.AppointmentDate.Date == day)
+            .Select(a => a.AppointmentDate)
+            .ToListAsync();
+
+        var now = DateTime.Now;
+        var slots = new List<object>();
+        for (var t = 8 * 60; t < 18 * 60; t += 30) // 08:00 – 17:30
+        {
+            var slotTime = day.AddMinutes(t);
+            if (slotTime < now.AddMinutes(30)) continue;
+            var taken = booked.Any(b => b > slotTime.AddMinutes(-45) && b < slotTime.AddMinutes(45));
+            if (!taken)
+                slots.Add(new { value = slotTime.ToString("HH:mm"), label = slotTime.ToString("h:mm tt") });
+        }
+        return Json(slots);
+    }
+
     [Authorize(Roles = "Administrator, Clinic Staff")]
     public async Task<IActionResult> Edit(int? id)
     {
@@ -392,15 +414,16 @@ public class AppointmentsController : Controller
 
     private async Task PopulateDropdownsAsync()
     {
-        var vets = await _db.Users
-            .Where(u => u.Role == "Veterinarian" && u.IsActive)
-            .OrderBy(u => u.Name)
+        var role = User.GetUserRole();
+        var vetsQuery = _db.Users.Where(u => u.Role == "Veterinarian" && u.IsActive);
+        if (role == "Pet Owner")
+            vetsQuery = vetsQuery.Where(u => u.Name != "Dr. Marco Reyes");
+        var vets = await vetsQuery.OrderBy(u => u.Name)
             .Select(u => new { u.UserID, u.Name })
             .ToListAsync();
         ViewBag.VetID = new SelectList(vets, "UserID", "Name");
         ViewBag.ServiceTypes = ServiceTypes;
 
-        var role = User.GetUserRole();
         var petsQuery = _db.Pets.Include(p => p.Owner).AsQueryable();
         if (role == "Pet Owner")
             petsQuery = petsQuery.Where(p => p.OwnerID == User.GetUserId());

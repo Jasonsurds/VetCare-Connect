@@ -39,6 +39,24 @@ public class VaccinationRemindersController : Controller
         return View(reminders);
     }
 
+    public async Task<IActionResult> Details(int? id)
+    {
+        if (id == null) return NotFound();
+
+        var reminder = await _db.VaccinationReminders
+            .Include(v => v.Pet)
+            .ThenInclude(p => p!.Owner)
+            .FirstOrDefaultAsync(v => v.ReminderID == id);
+        if (reminder == null) return NotFound();
+
+        if (User.GetUserRole() == "Pet Owner" && reminder.Pet!.OwnerID != User.GetUserId())
+            return NotFound();
+
+        ViewData["Title"] = "Vaccination Reminder";
+        ViewData["DashTitle"] = $"Reminder — {reminder.VaccineName}";
+        return View(reminder);
+    }
+
     [Authorize(Roles = "Administrator, Clinic Staff, Veterinarian")]
     public async Task<IActionResult> Create(int? petId)
     {

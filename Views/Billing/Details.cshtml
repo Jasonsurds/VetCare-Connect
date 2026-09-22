@@ -54,20 +54,17 @@
                         <span class="form-hint">PAYMENT METHOD</span> <span class="cell-strong">@Model.PaymentMethod</span>
                     </div>
                     <div class="d-flex gap-2">
-                        @if (Model.PaymentStatus == "Pending" && (isOwner || role is "Administrator" or "Clinic Staff"))
+                        @if (Model.PaymentStatus == "Pending" && role is "Administrator" or "Clinic Staff")
                         {
                             <form asp-action="MarkPaid" method="post" class="d-flex gap-2" id="payForm">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@Model.InvoiceID" />
-                                @if (isOwner)
-                                {
-                                    <select name="paymentMethod" class="form-control-vc" style="width:auto;">
-                                        <option value="Cash">Cash (pay at clinic)</option>
-                                        <option value="Card">Card</option>
-                                        <option value="Online">Online</option>
-                                    </select>
-                                }
-                                <button class="btn-vc" type="submit">@(isOwner ? "Pay now" : "Mark as paid")</button>
+                                <select name="paymentMethod" class="form-control-vc" style="width:auto;">
+                                    <option value="Cash">Cash</option>
+                                    <option value="Card">Card</option>
+                                    <option value="Online">Online</option>
+                                </select>
+                                <button class="btn-vc" type="submit">Mark as paid</button>
                             </form>
                         }
                         <a class="btn-vc-outline" asp-action="Index">Back to invoices</a>
@@ -75,7 +72,7 @@
                 </div>
                 @if (isOwner && Model.PaymentStatus == "Pending")
                 {
-                    <p class="page-note mt-3 mb-0">Paying online settles your invoice immediately and awards loyalty points (1 point per ₱100).</p>
+                    <p class="page-note mt-3 mb-0">Please settle this invoice at the clinic's front desk.</p>
                 }
             </div>
         </div>
