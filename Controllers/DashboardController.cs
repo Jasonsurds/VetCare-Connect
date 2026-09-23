@@ -190,7 +190,9 @@ public class DashboardController : Controller
         if (User.GetUserRole() != "Supplier") return Forbid();
 
         var name = User.Identity?.Name ?? "";
-        var supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierName == name);
+        var me = await _db.Users.FirstOrDefaultAsync(u => u.UserName == name);
+        var supplier = await _db.Suppliers.FirstOrDefaultAsync(s =>
+            s.SupplierName == name || (me != null && s.SupplierName == me.Name));
         var vm = new ViewModels.SupplierDashboardViewModel
         {
             Supplier = supplier,
@@ -200,6 +202,15 @@ public class DashboardController : Controller
                     .Include(i => i.Supplier)
                     .Where(i => i.SupplierID == supplier.SupplierID)
                     .OrderBy(i => i.ItemName)
+                    .ToListAsync(),
+            RecentRequests = supplier == null
+                ? new List<Models.PurchaseRequest>()
+                : await _db.PurchaseRequests
+                    .Include(r => r.InventoryItem)
+                    .Include(r => r.Requester)
+                    .Where(r => r.InventoryItem!.SupplierID == supplier.SupplierID)
+                    .OrderByDescending(r => r.RequestedAt)
+                    .Take(5)
                     .ToListAsync()
         };
 

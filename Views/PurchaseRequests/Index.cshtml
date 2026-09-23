@@ -1,0 +1,155 @@
+@model IEnumerable<VetCare.Models.PurchaseRequest>
+@{
+    Layout = "_DashboardLayout";
+    var role = User.GetUserRole();
+    var isSupplier = role == "Supplier";
+    var userId = User.GetUserId();
+    var canCreate = isSupplier;
+    var canReceive = role == "Clinic Staff";
+    var statuses = new[] { "All", "Pending", "Confirmed", "Received", "Cancelled" };
+}
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <div>
+            <h3 class="vc-card-title">@(isSupplier ? "Restock requests for my products" : "Restock requests")</h3>
+            <div class="dash-title-sub">Requests proposed by suppliers and processed by clinic staff.</div>
+        </div>
+        @if (canCreate)
+        {
+            <a class="btn-vc" asp-action="Create">+ Request restock</a>
+        }
+    </div>
+    <div class="vc-card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-auto">
+                <select name="status" class="form-control-vc" onchange="this.form.submit()">
+                    @foreach (var s in statuses)
+                    {
+                        <option value="@s" selected="@(ViewBag.Status?.ToString() == s)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto" style="flex:1; min-width:220px;">
+                <input type="text" name="search" class="form-control-vc" placeholder="Search by item name..." value="@ViewBag.Search" />
+            </div>
+            <div class="col-auto">
+                <button class="btn-vc-outline" type="submit">Filter</button>
+            </div>
+        </form>
+
+        @if (Model.Any())
+        {
+            <div class="table-scroll">
+                <table class="vc-table">
+                    <thead>
+                        <tr>
+                            <th>Request</th>
+                            <th>Item</th>
+                            <th>Requester</th>
+                            <th>Qty</th>
+                            <th>Requested</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td class="cell-strong">#REQ-@r.RequestID.ToString("D3")</td>
+                            <td>
+                                <div class="cell-strong">@r.InventoryItem?.ItemName</div>
+                                <div class="cell-muted">@r.InventoryItem?.Category@(r.InventoryItem?.Supplier != null ? $" · supplier: {r.InventoryItem.Supplier.SupplierName}" : "")</div>
+                            </td>
+                            <td>@RequesterName(r)</td>
+                            <td>@r.Quantity</td>
+                            <td>@r.RequestedAt.ToString("MMM dd, yyyy · h:mm tt")</td>
+                            <td>
+                                @if (r.Status == "Pending")
+                                {
+                                    <span class="badge-vc b-pending">Pending</span>
+                                }
+                                else if (r.Status == "Confirmed")
+                                {
+                                    <span class="badge-vc b-info">Confirmed</span>
+                                }
+                                else if (r.Status == "Received")
+                                {
+                                    <span class="badge-vc b-ok">Received</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-vc b-low">Cancelled</span>
+                                }
+                                @if (r.Notes != null)
+                                {
+                                    <div class="cell-muted" style="font-size:.78rem;">@r.Notes</div>
+                                }
+                            </td>
+                            <td style="text-align:right;">
+                                @if (r.Status == "Received" && r.ProcessedBy != null)
+                                {
+                                    <span class="cell-muted" style="font-size:.78rem;">by @ProcessorName(r) · @(r.ProcessedAt?.ToString("MMM dd"))</span>
+                                }
+                                else if (r.Status == "Pending" && isSupplier && r.RequestedBy == userId)
+                                {
+                                    <form asp-action="Cancel" method="post" class="d-inline"
+                                          data-confirm="This request will be cancelled and the clinic will be notified."
+                                          data-confirm-title="Cancel restock request"
+                                          data-confirm-ok="Yes, cancel"
+                                          data-confirm-tone="danger">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.RequestID" />
+                                        <button class="btn-vc-outline btn-vc-danger btn-vc-sm" type="submit">Cancel</button>
+                                    </form>
+                                }
+                                else if (r.Status == "Pending" && isSupplier && r.RequestedBy != userId)
+                                {
+                                    <form asp-action="Confirm" method="post" class="d-inline"
+                                          data-confirm="Confirm to VetCare Connect that you can supply this order."
+                                          data-confirm-title="Confirm restock order"
+                                          data-confirm-ok="Confirm request"
+                                          data-confirm-details='@System.Text.Json.JsonSerializer.Serialize(new object[]
+                                          {
+                                              new { label = "Item", value = r.InventoryItem?.ItemName ?? "" },
+                                              new { label = "Quantity", value = $"{r.Quantity} unit(s)" },
+                                              new { label = "Requested by", value = r.Requester?.Name ?? r.Requester?.UserName ?? "VetCare Connect" }
+                                          })'>
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.RequestID" />
+                                        <button class="btn-vc btn-vc-sm" type="submit">Confirm</button>
+                                    </form>
+                                }
+                                else if ((r.Status == "Pending" || r.Status == "Confirmed") && canReceive)
+                                {
+                                    <form asp-action="MarkReceived" method="post" class="d-inline" data-confirm="Mark as received and add @r.Quantity unit(s) of '@r.InventoryItem?.ItemName' to inventory?">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.RequestID" />
+                                        <button class="btn-vc btn-vc-sm" type="submit">Mark received</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <p>No restock requests found.</p>
+                @if (isSupplier)
+                {
+                    <a class="btn-vc-outline mt-2" asp-action="Create">Submit your first request</a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string RequesterName(VetCare.Models.PurchaseRequest r) => r.Requester?.Name ?? r.Requester?.UserName ?? "—";
+    string ProcessorName(VetCare.Models.PurchaseRequest r) => r.Processor?.Name ?? r.Processor?.UserName ?? "—";
+}

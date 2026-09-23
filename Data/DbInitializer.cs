@@ -33,6 +33,45 @@ public static class DbInitializer
                     CREATE INDEX [IX_Notifications_UserID] ON [Notifications] ([UserID]);
                 END
             ");
+            context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'BillingItems')
+                BEGIN
+                    CREATE TABLE [BillingItems] (
+                        [BillingItemID] int NOT NULL IDENTITY,
+                        [InvoiceID] int NOT NULL,
+                        [InventoryItemID] int NOT NULL,
+                        [Description] nvarchar(200) NOT NULL,
+                        [Quantity] int NOT NULL,
+                        [UnitPrice] decimal(10,2) NOT NULL,
+                        CONSTRAINT [PK_BillingItems] PRIMARY KEY ([BillingItemID]),
+                        CONSTRAINT [FK_BillingItems_Billings_InvoiceID] FOREIGN KEY ([InvoiceID]) REFERENCES [Billings] ([InvoiceID]) ON DELETE CASCADE,
+                        CONSTRAINT [FK_BillingItems_InventoryItems_InventoryItemID] FOREIGN KEY ([InventoryItemID]) REFERENCES [InventoryItems] ([ItemID])
+                    );
+                    CREATE INDEX [IX_BillingItems_InvoiceID] ON [BillingItems] ([InvoiceID]);
+                END
+            ");
+        context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'PurchaseRequests')
+                BEGIN
+                    CREATE TABLE [PurchaseRequests] (
+                        [RequestID] int NOT NULL IDENTITY,
+                        [InventoryItemID] int NOT NULL,
+                        [RequestedBy] int NOT NULL,
+                        [Quantity] int NOT NULL,
+                        [Status] nvarchar(20) NOT NULL,
+                        [Notes] nvarchar(500) NULL,
+                        [RequestedAt] datetime2 NOT NULL,
+                        [ProcessedAt] datetime2 NULL,
+                        [ProcessedBy] int NULL,
+                        CONSTRAINT [PK_PurchaseRequests] PRIMARY KEY ([RequestID]),
+                        CONSTRAINT [FK_PurchaseRequests_InventoryItems_InventoryItemID] FOREIGN KEY ([InventoryItemID]) REFERENCES [InventoryItems] ([ItemID]),
+                        CONSTRAINT [FK_PurchaseRequests_Users_RequestedBy] FOREIGN KEY ([RequestedBy]) REFERENCES [Users] ([UserID]),
+                        CONSTRAINT [FK_PurchaseRequests_Users_ProcessedBy] FOREIGN KEY ([ProcessedBy]) REFERENCES [Users] ([UserID])
+                    );
+                    CREATE INDEX [IX_PurchaseRequests_InventoryItemID] ON [PurchaseRequests] ([InventoryItemID]);
+                    CREATE INDEX [IX_PurchaseRequests_RequestedBy] ON [PurchaseRequests] ([RequestedBy]);
+                END
+            ");
         }
         catch { /* ignore if already created or managed by EF */ }
 
@@ -58,6 +97,18 @@ public static class DbInitializer
             NewUser("Supplier", "VetSupply Co.", "supplier", "supplier123", "supplier@vetcare.com"));
 
         context.SaveChanges();
+
+        if (context.Suppliers.Any() == false)
+        {
+            context.Suppliers.Add(new Supplier
+            {
+                SupplierName = "VetSupply Co.",
+                ContactInfo = "supplier@vetcare.com | 0917-555-0142 | Unit 8, Sterling Industrial Park, Valenzuela City",
+                ProductCatalog = "Antibiotics, antiparasitics, vaccines",
+                ContractDetails = "Standard supply agreement; 30-day payment terms; clinic restock requests are sent here."
+            });
+            context.SaveChanges();
+        }
 
         SeedNotifications(context);
     }
@@ -165,17 +216,19 @@ public static class DbInitializer
     {
         if (context.InventoryItems.Any()) return;
 
+        var supplierID = context.Suppliers.FirstOrDefault()?.SupplierID;
+
         context.InventoryItems.AddRange(
-            NewInventoryItem("Amoxicillin", "Antibiotic", 50, 35.00m, 10),
-            NewInventoryItem("Enrofloxacin", "Antibiotic", 40, 60.00m, 10),
-            NewInventoryItem("Ivermectin", "Antiparasitic", 30, 45.00m, 8),
-            NewInventoryItem("Doxycycline", "Antibiotic", 45, 55.00m, 10),
-            NewInventoryItem("Vaccines", "Vaccine", 25, 150.00m, 5));
+            NewInventoryItem("Amoxicillin", "Antibiotic", 50, 35.00m, 10, supplierID),
+            NewInventoryItem("Enrofloxacin", "Antibiotic", 40, 60.00m, 10, supplierID),
+            NewInventoryItem("Ivermectin", "Antiparasitic", 30, 45.00m, 8, supplierID),
+            NewInventoryItem("Doxycycline", "Antibiotic", 45, 55.00m, 10, supplierID),
+            NewInventoryItem("Vaccines", "Vaccine", 25, 150.00m, 5, supplierID));
 
         context.SaveChanges();
     }
 
-    private static InventoryItem NewInventoryItem(string itemName, string category, int quantity, decimal unitPrice, int reorderLevel)
+    private static InventoryItem NewInventoryItem(string itemName, string category, int quantity, decimal unitPrice, int reorderLevel, int? supplierID = null)
     {
         return new InventoryItem
         {
@@ -184,6 +237,7 @@ public static class DbInitializer
             Quantity = quantity,
             UnitPrice = unitPrice,
             ReorderLevel = reorderLevel,
+            SupplierID = supplierID,
             LastUpdated = DateTime.Now
         };
     }

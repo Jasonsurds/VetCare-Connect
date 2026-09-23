@@ -12,4 +12,5 @@ public class InventoryItem
     public DateTime LastUpdated { get; set; } = DateTime.Now;
 
     public Supplier? Supplier { get; set; }
+    public ICollection<BillingItem> BillingItems { get; set; } = new List<BillingItem>();
 }

@@ -172,6 +172,10 @@
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1z"></path><path d="M16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                     Suppliers
                 </a>
+                <a class="side-link @(currentController == "PurchaseRequests" ? "active" : "")" asp-controller="PurchaseRequests" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2"></path><path d="M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"></path><path d="M3 8h18"></path><path d="M9 12h6"></path></svg>
+                    Restock Requests
+                </a>
             }
             else if (role == "Pet Owner")
             {
@@ -225,6 +229,10 @@
                 <a class="side-link @(currentController == "Suppliers" ? "active" : "")" asp-controller="Suppliers" asp-action="My">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1z"></path><path d="M16 8h4l3 3v5h-7V8z"></path><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                     My Profile
+                </a>
+                <a class="side-link @(currentController == "PurchaseRequests" ? "active" : "")" asp-controller="PurchaseRequests" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2"></path><path d="M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"></path><path d="M3 8h18"></path><path d="M9 12h6"></path></svg>
+                    Restock Requests
                 </a>
             }
         </nav>

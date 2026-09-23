@@ -16,6 +16,7 @@
                 @if (isAdmin)
                 {
                     <a class="btn-vc-outline mt-3" asp-action="Edit" asp-route-id="@Model.SupplierID">Edit supplier</a>
+                    <a class="btn-vc mt-3 ms-2" asp-controller="PurchaseRequests" asp-action="Create" asp-route-supplierId="@Model.SupplierID">Request restock</a>
                 }
                 <a class="btn-vc-outline mt-3 ms-2" asp-action="Index">Back to suppliers</a>
             </div>

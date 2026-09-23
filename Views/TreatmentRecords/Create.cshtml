@@ -25,7 +25,14 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label-vc">Diagnosis *</label>
-                                <input name="diagnosis" class="form-control-vc" required placeholder="e.g. Mild atopic dermatitis" />
+                                <input name="diagnosis" class="form-control-vc" list="diagnosisPresets" required placeholder="Select or type a diagnosis..." />
+                                <datalist id="diagnosisPresets">
+                                    <option value="Acute otitis externa"></option>
+                                    <option value="Mild gastroenteritis"></option>
+                                    <option value="Viral URI"></option>
+                                    <option value="Mild atopic dermatitis"></option>
+                                    <option value="Mild hip dysplasia"></option>
+                                </datalist>
                             </div>
                             <div class="col-12">
                                 <label class="form-label-vc">Prescription</label>
@@ -53,3 +60,38 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var autofill = {
+        "Acute otitis externa": {
+            prescription: "Ciprofloxacin ear drops, 2 drops twice daily for 7 days; clean ear canal daily with veterinary solution.",
+            notes: "Recheck in 1 week; advise owner to avoid water entering ears."
+        },
+        "Mild atopic dermatitis": {
+            prescription: "Cetirizine 10 mg once daily for 7 days; topical hydrocortisone spray twice daily for 5 days; Omega-3 supplement daily.",
+            notes: "Monitor for recurrence; recheck in 10 days; advise owner to reduce allergen exposure."
+        },
+        "Mild gastroenteritis": {
+            prescription: "Oral rehydration solution every 2-3 hours; bland diet (boiled chicken + rice) for 3 days; Metronidazole 250 mg twice daily for 5 days if diarrhea persists.",
+            notes: "Monitor hydration; recheck if symptoms worsen; advise owner to avoid sudden diet changes."
+        },
+        "Viral URI": {
+            prescription: "L-Lysine supplement 250 mg twice daily for 10 days; saline nasal drops as needed; supportive care (hydration, warm environment).",
+            notes: "Recheck if symptoms worsen; advise owner to isolate cat from others to prevent spread."
+        },
+        "Mild hip dysplasia": {
+            prescription: "Carprofen 25 mg once daily for 7 days; Glucosamine + Chondroitin supplement daily; controlled exercise (short leash walks, avoid jumping).",
+            notes: "Recheck in 2 weeks; consider X-ray if symptoms persist; advise weight management for long-term joint health."
+        }
+    };
+    var dg = document.querySelector('[name="diagnosis"]');
+    if (!dg) return;
+    dg.addEventListener('input', function () {
+        var preset = autofill[dg.value.trim()];
+        if (!preset) return;
+        document.querySelector('[name="prescription"]').value = preset.prescription;
+        document.querySelector('[name="treatmentNotes"]').value = preset.notes;
+    });
+})();
+</script>

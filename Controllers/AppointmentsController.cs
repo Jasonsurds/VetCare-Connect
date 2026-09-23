@@ -37,7 +37,7 @@ public class AppointmentsController : Controller
         if (role == "Pet Owner")
             query = query.Where(a => a.Pet!.OwnerID == User.GetUserId());
         else if (role == "Veterinarian")
-            query = query.Where(a => a.VetID == User.GetUserId());
+            query = query.Where(a => a.VetID == User.GetUserId() && a.AppointmentDate.Date == DateTime.Today);
 
         if (!string.IsNullOrWhiteSpace(status) && status != "All")
             query = query.Where(a => a.Status == status);
@@ -78,12 +78,13 @@ public class AppointmentsController : Controller
         var allowed = role switch
         {
             "Administrator" or "Clinic Staff" => true,
-            "Veterinarian" => appointment.VetID == User.GetUserId(),
+            "Veterinarian" => appointment.VetID == User.GetUserId() && appointment.AppointmentDate.Date == DateTime.Today,
             "Pet Owner" => appointment.Pet!.OwnerID == User.GetUserId(),
             _ => false
         };
         if (!allowed) return Forbid();
 
+        ViewBag.InventoryItems = await _db.InventoryItems.OrderBy(i => i.ItemName).ToListAsync();
         ViewData["Title"] = $"Appointment #{appointment.AppointmentID}";
         ViewData["DashTitle"] = $"Appointment #{appointment.AppointmentID}";
         return View(appointment);
@@ -310,15 +311,39 @@ public class AppointmentsController : Controller
         if (role != "Veterinarian" || appointment.VetID != User.GetUserId())
             return Forbid();
 
+        // Medicines the vet selected for this visit: checkbox "usedItems" + "qty_<itemId>".
+        var used = new Dictionary<int, int>();
+        foreach (var sid in Request.Form["usedItems"])
+        {
+            if (int.TryParse(sid, out var itemId)
+                && int.TryParse(Request.Form["qty_" + itemId], out var qty) && qty > 0)
+                used[itemId] = qty;
+        }
+
+        var selected = new List<InventoryItem>();
+        if (used.Count > 0)
+        {
+            selected = await _db.InventoryItems.Where(i => used.Keys.Contains(i.ItemID)).ToListAsync();
+            foreach (var item in selected)
+            {
+                if (used[item.ItemID] > item.Quantity)
+                {
+                    TempData["SuccessMessage"] = $"'{item.ItemName}' is low in stock — only {item.Quantity} left but you selected {used[item.ItemID]}. Please reduce the quantity or leave it out.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+            }
+        }
+
         appointment.Status = "Completed";
         await _db.SaveChangesAsync();
 
         // Automatically forward the consultation bill to Billing (front desk) for invoicing.
         var billNote = string.Empty;
-        if (!await _db.Billings.AnyAsync(b => b.AppointmentID == id))
+        var bill = await _db.Billings.FirstOrDefaultAsync(b => b.AppointmentID == id);
+        if (bill == null)
         {
             var fee = ServiceFees.GetFee(appointment.ServiceType);
-            _db.Billings.Add(new Billing
+            bill = new Billing
             {
                 AppointmentID = appointment.AppointmentID,
                 OwnerID = appointment.Pet!.OwnerID,
@@ -326,12 +351,37 @@ public class AppointmentsController : Controller
                 PaymentMethod = "Cash",
                 PaymentStatus = "Pending",
                 DateIssued = DateTime.Now
-            });
+            };
+            _db.Billings.Add(bill);
             await _db.SaveChangesAsync();
             billNote = $" The bill (₱{fee:N2}) has been sent to Billing — the front desk will issue it to the owner.";
         }
 
-        await _audit.LogAsync("Update", "Appointments", $"Appointment #{id} marked as Completed. Bill forwarded to Billing.");
+        // Add medicine line items to the invoice and deduct them from inventory.
+        if (selected.Count > 0)
+        {
+            var medTotal = 0m;
+            foreach (var item in selected)
+            {
+                var qtyUsed = used[item.ItemID];
+                _db.BillingItems.Add(new BillingItem
+                {
+                    InvoiceID = bill.InvoiceID,
+                    InventoryItemID = item.ItemID,
+                    Description = item.ItemName,
+                    Quantity = qtyUsed,
+                    UnitPrice = item.UnitPrice
+                });
+                item.Quantity -= qtyUsed;
+                item.LastUpdated = DateTime.Now;
+                medTotal += qtyUsed * item.UnitPrice;
+            }
+            bill.TotalAmount += medTotal;
+            await _db.SaveChangesAsync();
+            billNote += $" {selected.Count} medicine(s) (₱{medTotal:N2}) were added to the invoice and deducted from inventory.";
+        }
+
+        await _audit.LogAsync("Update", "Appointments", $"Appointment #{id} marked as Completed. Bill forwarded to Billing (incl. {selected.Count} medicine line item(s)).");
 
         // Notify Owner
         var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";

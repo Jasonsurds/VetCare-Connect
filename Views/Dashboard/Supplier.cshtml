@@ -68,4 +68,61 @@
             </div>
         </div>
     </div>
+
+    <div class="col-lg-12">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <div>
+                    <h3 class="vc-card-title">Restock requests for my products</h3>
+                    <div class="dash-title-sub">Latest 5 — view all in Restock Requests.</div>
+                </div>
+                <a class="btn-vc" asp-controller="PurchaseRequests" asp-action="Create">+ Request restock</a>
+            </div>
+            <div class="vc-card-body p-0 table-scroll">
+                @if (Model.RecentRequests.Any())
+                {
+                    <table class="vc-table">
+                        <thead><tr><th>Request</th><th>Item</th><th>Requested by</th><th>Qty</th><th>Requested</th><th>Status</th></tr></thead>
+                        <tbody>
+                        @foreach (var r in Model.RecentRequests)
+                        {
+                            <tr>
+                                <td class="cell-strong">#REQ-@r.RequestID.ToString("D3")</td>
+                                <td class="cell-strong">@r.InventoryItem?.ItemName</td>
+                                <td>@(r.Requester?.Name ?? r.Requester?.UserName ?? "—")</td>
+                                <td>@r.Quantity</td>
+                                <td>@r.RequestedAt.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    @if (r.Status == "Pending")
+                                    {
+                                        <span class="badge-vc b-pending">Pending</span>
+                                    }
+                                    else if (r.Status == "Confirmed")
+                                    {
+                                        <span class="badge-vc b-info">Confirmed</span>
+                                    }
+                                    else if (r.Status == "Received")
+                                    {
+                                        <span class="badge-vc b-ok">Received</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-vc b-low">Cancelled</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <p>No restock requests yet.</p>
+                        <a class="btn-vc-outline mt-2" asp-controller="PurchaseRequests" asp-action="Create">Submit your first request</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>

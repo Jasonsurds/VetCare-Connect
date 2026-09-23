@@ -48,4 +48,5 @@ public class SupplierDashboardViewModel
 {
     public Supplier? Supplier { get; set; }
     public List<InventoryItem> CatalogItems { get; set; } = new();
+    public List<PurchaseRequest> RecentRequests { get; set; } = new();
 }

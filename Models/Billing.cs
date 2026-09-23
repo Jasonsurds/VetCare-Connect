@@ -12,4 +12,5 @@ public class Billing
 
     public Appointment? Appointment { get; set; }
     public User? Owner { get; set; }
+    public ICollection<BillingItem> Items { get; set; } = new List<BillingItem>();
 }

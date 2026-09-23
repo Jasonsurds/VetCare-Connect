@@ -33,6 +33,7 @@
                         @if (isAdmin)
                         {
                             <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@s.SupplierID">Edit</a>
+                            <a class="btn-vc btn-vc-sm" asp-controller="PurchaseRequests" asp-action="Create" asp-route-supplierId="@s.SupplierID">Request restock</a>
                             <form asp-action="Delete" method="post" data-confirm="Delete supplier '@s.SupplierName'?">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@s.SupplierID" />

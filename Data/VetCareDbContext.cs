@@ -13,9 +13,11 @@ public class VetCareDbContext : DbContext
     public DbSet<TreatmentRecord> TreatmentRecords => Set<TreatmentRecord>();
     public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
     public DbSet<Billing> Billings => Set<Billing>();
+    public DbSet<BillingItem> BillingItems => Set<BillingItem>();
     public DbSet<VaccinationReminder> VaccinationReminders => Set<VaccinationReminder>();
     public DbSet<CrmRecord> CrmRecords => Set<CrmRecord>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -82,6 +84,20 @@ public class VetCareDbContext : DbContext
              .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<BillingItem>(e =>
+        {
+            e.HasKey(b => b.BillingItemID);
+            e.Property(b => b.UnitPrice).HasPrecision(10, 2);
+            e.HasOne(b => b.Billing)
+             .WithMany(b => b.Items)
+             .HasForeignKey(b => b.InvoiceID)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(b => b.InventoryItem)
+             .WithMany(i => i.BillingItems)
+             .HasForeignKey(b => b.InventoryItemID)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<VaccinationReminder>(e =>
         {
             e.HasKey(v => v.ReminderID);
@@ -115,6 +131,24 @@ public class VetCareDbContext : DbContext
              .WithMany()
              .HasForeignKey(n => n.UserID)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PurchaseRequest>(e =>
+        {
+            e.HasKey(r => r.RequestID);
+            e.Property(r => r.Status).HasMaxLength(20);
+            e.HasOne(r => r.InventoryItem)
+             .WithMany()
+             .HasForeignKey(r => r.InventoryItemID)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.Requester)
+             .WithMany()
+             .HasForeignKey(r => r.RequestedBy)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.Processor)
+             .WithMany()
+             .HasForeignKey(r => r.ProcessedBy)
+             .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

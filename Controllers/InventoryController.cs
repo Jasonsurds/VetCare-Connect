@@ -30,8 +30,18 @@ public class InventoryController : Controller
 
         if (role == "Supplier")
         {
-            var supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierName == User.Identity!.Name);
-            query = query.Where(i => i.SupplierID == supplier!.SupplierID);
+            var name = User.Identity!.Name ?? "";
+            var me = await _db.Users.FirstOrDefaultAsync(u => u.UserName == name);
+            var supplier = await _db.Suppliers.FirstOrDefaultAsync(s =>
+                s.SupplierName == name || (me != null && s.SupplierName == me.Name));
+            if (supplier == null)
+            {
+                ViewBag.Search = search; ViewBag.Filter = filter; ViewBag.Page = page; ViewBag.TotalPages = 1;
+                ViewData["PagerParams"] = new Dictionary<string, object?> { ["search"] = search, ["filter"] = filter };
+                ViewData["Title"] = "Medicine Inventory"; ViewData["DashTitle"] = "My Catalog";
+                return View(new List<InventoryItem>());
+            }
+            query = query.Where(i => i.SupplierID == supplier.SupplierID);
         }
 
         if (!string.IsNullOrWhiteSpace(search))

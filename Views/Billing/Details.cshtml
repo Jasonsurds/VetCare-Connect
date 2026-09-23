@@ -40,8 +40,18 @@
                                 <div class="cell-muted">Appointment #@Model.AppointmentID · @Model.Appointment?.AppointmentDate.ToString("MMM dd, yyyy") · Dr. @Model.Appointment?.Vet?.Name</div>
                                 <div class="cell-muted">Pet: @Model.Appointment?.Pet?.PetName (@Model.Appointment?.Pet?.Species)</div>
                             </td>
-                            <td style="text-align:right;" class="cell-strong">@($"₱{Model.TotalAmount:N2}")</td>
+                            <td style="text-align:right;" class="cell-strong">@($"₱{Model.TotalAmount - Model.Items.Sum(i => i.LineTotal):N2}")</td>
                         </tr>
+                        @foreach (var line in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="cell-strong">@line.Description</div>
+                                    <div class="cell-muted">Medication × @line.Quantity</div>
+                                </td>
+                                <td style="text-align:right;" class="cell-strong">@($"₱{line.LineTotal:N2}")</td>
+                            </tr>
+                        }
                         <tr>
                             <td style="text-align:right;"><span class="cell-strong">Total</span></td>
                             <td style="text-align:right;"><span class="stat-number" style="font-size:1.2rem;">@($"₱{Model.TotalAmount:N2}")</span></td>

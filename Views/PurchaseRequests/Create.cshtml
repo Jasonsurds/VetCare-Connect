@@ -1,0 +1,73 @@
+@{
+    Layout = "_DashboardLayout";
+    var isAdmin = ViewBag.IsAdmin == true;
+    var supplierName = ViewBag.SupplierName as string;
+    var hasItems = ((SelectList)ViewBag.InventoryItemID!).Any();
+}
+@using VetCare.Models
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Request restock@(isAdmin ? $" — {supplierName}" : "")</h3>
+                @if (isAdmin)
+                {
+                    <a class="vc-card-link" asp-controller="Suppliers" asp-action="Details" asp-route-id="@ViewBag.SupplierID">← Back to supplier</a>
+                }
+                else
+                {
+                    <a class="vc-card-link" asp-action="Index">← Back to requests</a>
+                }
+            </div>
+            <div class="vc-card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                    @if (isAdmin)
+                    {
+                        <input type="hidden" name="supplierId" value="@ViewBag.SupplierID" />
+                    }
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label-vc">Item to restock *</label>
+                            @if (hasItems)
+                            {
+                                <select name="inventoryItemId" class="form-control-vc" asp-items="ViewBag.InventoryItemID" required>
+                                    <option value="">— Select an item@(isAdmin ? $" from {supplierName}'s catalog" : " from your catalog") —</option>
+                                </select>
+                                <div class="form-hint">Items at or below their reorder level are listed first.</div>
+                            }
+                            else
+                            {
+                                <div class="empty-state"><p>@(isAdmin ? $"No inventory items are linked to '{supplierName}' yet. Add items to their catalog first." : "No catalog items are linked to your account yet. Please contact the clinic administrator.")</p></div>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-vc">Quantity *</label>
+                            <input type="number" name="quantity" class="form-control-vc" value="10" min="1" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-vc">Notes</label>
+                            <textarea name="notes" class="form-control-vc" rows="3" placeholder="Optional — delivery notes, expected lead time..."></textarea>
+                        </div>
+                    </div>
+                    @if (hasItems)
+                    {
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn-vc">Submit request</button>
+                            @if (isAdmin)
+                            {
+                                <a class="btn-vc-outline" asp-controller="Suppliers" asp-action="Details" asp-route-id="@ViewBag.SupplierID">Cancel</a>
+                            }
+                            else
+                            {
+                                <a class="btn-vc-outline" asp-action="Index">Cancel</a>
+                            }
+                        </div>
+                    }
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

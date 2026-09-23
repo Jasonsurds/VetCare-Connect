@@ -61,6 +61,7 @@ public class BillingController : Controller
             .Include(b => b.Owner)
             .Include(b => b.Appointment).ThenInclude(a => a!.Pet)
             .Include(b => b.Appointment).ThenInclude(a => a!.Vet)
+            .Include(b => b.Items)
             .FirstOrDefaultAsync(b => b.InvoiceID == id);
         if (invoice == null) return NotFound();
 

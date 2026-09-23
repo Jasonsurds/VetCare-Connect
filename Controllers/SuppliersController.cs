@@ -42,9 +42,11 @@ public class SuppliersController : Controller
     [Authorize(Roles = "Supplier")]
     public async Task<IActionResult> My()
     {
+        var name = User.Identity?.Name ?? "";
+        var me = await _db.Users.FirstOrDefaultAsync(u => u.UserName == name);
         var supplier = await _db.Suppliers
             .Include(s => s.InventoryItems)
-            .FirstOrDefaultAsync(s => s.SupplierName == User.Identity!.Name);
+            .FirstOrDefaultAsync(s => s.SupplierName == name || (me != null && s.SupplierName == me.Name));
         if (supplier == null) return NotFound();
         ViewData["Title"] = "My Profile";
         ViewData["DashTitle"] = "My Supplier Profile";
