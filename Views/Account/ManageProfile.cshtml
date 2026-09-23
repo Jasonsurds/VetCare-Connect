@@ -1,0 +1,53 @@
+@model VetCare.Models.User
+@{
+    Layout = "_DashboardLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <h3 class="vc-card-title">Manage Profile</h3>
+                <div class="dash-title-sub">Keep your contact details up to date so the clinic can reach you.</div>
+            </div>
+            <div class="vc-card-body">
+                <form asp-action="ManageProfile" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Full name *</label>
+                            <input type="text" name="name" class="form-control-vc" value="@Model.Name" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Username</label>
+                            <input type="text" class="form-control-vc" value="@Model.UserName" readonly style="background:var(--dash-bg); opacity:.75;" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Email</label>
+                            <input type="email" name="email" class="form-control-vc" value="@Model.Email" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-vc">Contact number</label>
+                            <input type="tel" name="contactNumber" class="form-control-vc" value="@Model.ContactNumber" placeholder="e.g. 0917-000-0000" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-vc">Home address</label>
+                            <textarea name="address" class="form-control-vc" rows="2" placeholder="Street, City">@Model.Address</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-vc">New password <span class="form-hint">(optional — leave blank to keep current)</span></label>
+                            <input type="password" name="newPassword" class="form-control-vc" placeholder="At least 6 characters" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn-vc">Save changes</button>
+                        <a class="btn-vc-outline" asp-controller="Dashboard" asp-action="Index">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

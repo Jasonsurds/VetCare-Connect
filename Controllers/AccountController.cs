@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -108,5 +109,56 @@ namespace VetCare.Controllers
 
         [HttpGet]
         public IActionResult AccessDenied() => View();
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> ManageProfile()
+        {
+            var user = await _db.Users.FindAsync(User.GetUserId());
+            if (user == null) return NotFound();
+            ViewData["Title"] = "Manage Profile";
+            ViewData["DashTitle"] = "Manage Profile";
+            return View(user);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ManageProfile(string name, string? email, string? contactNumber, string? address, string? newPassword)
+        {
+            var user = await _db.Users.FindAsync(User.GetUserId());
+            if (user == null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                ModelState.AddModelError(nameof(name), "Name is required.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(newPassword) && newPassword.Length < 6)
+            {
+                ModelState.AddModelError(nameof(newPassword), "Password must be at least 6 characters.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewData["Title"] = "Manage Profile";
+                ViewData["DashTitle"] = "Manage Profile";
+                return View(user);
+            }
+
+            user.Name = name.Trim();
+            user.Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+            user.ContactNumber = string.IsNullOrWhiteSpace(contactNumber) ? null : contactNumber.Trim();
+            user.Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
+            if (!string.IsNullOrWhiteSpace(newPassword))
+                user.Password = _hasher.HashPassword(user, newPassword);
+
+            await _db.SaveChangesAsync();
+            await _audit.LogAsync("Update", "Users",
+                $"{user.Name} updated their own profile.", user.Name);
+
+            TempData["SuccessMessage"] = "Your profile has been updated.";
+            return RedirectToAction(nameof(ManageProfile));
+        }
     }
 }
