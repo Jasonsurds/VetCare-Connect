@@ -88,13 +88,13 @@ public static class DbInitializer
         // treatments, inventory, billing, reminders, CRM, suppliers, reports) start
         // empty — data is entered through the system itself.
         context.Users.AddRange(
-            NewUser("Administrator", "Dr. Amelia Cruz", "admin", "admin123", "admin@vetcare.com"),
-            NewUser("Veterinarian", "Dr. Sarah Chen", "vet", "vet123", "vet@vetcare.com", "0917-100-2000"),
-            NewUser("Veterinarian", "Dr. Marco Reyes", "vet2", "vet123", "vet2@vetcare.com", "0917-100-2001"),
-            NewUser("Clinic Staff", "Grace Lim", "staff", "staff123", "staff@vetcare.com", "0917-100-3000"),
-            NewUser("Pet Owner", "Jason Surdilla", "owner", "owner123", "owner@vetcare.com", "0917-100-4000", "123 Mabini St., Quezon City"),
-            NewUser("Pet Owner", "Maria Santos", "owner2", "owner123", "owner2@vetcare.com", "0917-100-4001", "45 Rizal Ave., Makati City"),
-            NewUser("Supplier", "VetSupply Co.", "supplier", "supplier123", "supplier@vetcare.com"));
+            NewUser("Administrator", "Dr. Amelia Cruz", "admin", "^n@v62XWr8GvLC", "admin@vetcare.com"),
+            NewUser("Veterinarian", "Dr. Sarah Chen", "vet", "LrWPmC7mVh^Z9f", "vet@vetcare.com", "0917-100-2000"),
+            NewUser("Veterinarian", "Dr. Marco Reyes", "vet2", "@jF4*jPnhw5ZRA", "vet2@vetcare.com", "0917-100-2001"),
+            NewUser("Clinic Staff", "Grace Lim", "staff", "NayJT^JvyAQkQ6h", "staff@vetcare.com", "0917-100-3000"),
+            NewUser("Pet Owner", "Jason Surdilla", "owner", "9ne$t8VfeyJF#q", "owner@vetcare.com", "0917-100-4000", "123 Mabini St., Quezon City"),
+            NewUser("Pet Owner", "Maria Santos", "owner2", "6R#SNfAmNrgWw$", "owner2@vetcare.com", "0917-100-4001", "45 Rizal Ave., Makati City"),
+            NewUser("Supplier", "VetSupply Co.", "supplier", "^p*2FZBwggLLs@", "supplier@vetcare.com"));
 
         context.SaveChanges();
 

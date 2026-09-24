@@ -59,6 +59,11 @@
                                 <input type="hidden" name="id" value="@u.UserID" />
                                 <button class="btn-vc-outline btn-vc-sm @(u.IsActive ? "btn-vc-danger" : "")" type="submit">@(u.IsActive ? "Deactivate" : "Activate")</button>
                             </form>
+                            <form asp-action="Delete" method="post" class="d-inline" data-confirm="Permanently delete account '@u.UserName'? This removes their login and account record entirely.">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@u.UserID" />
+                                <button class="btn-vc-outline btn-vc-sm btn-vc-danger" type="submit">Delete</button>
+                            </form>
                         }
                     </td>
                 </tr>

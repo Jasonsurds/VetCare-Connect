@@ -121,13 +121,55 @@ public class UsersController : Controller
         if (user == null) return NotFound();
         if (user.UserID == User.GetUserId())
         {
-            TempData["SuccessMessage"] = "You cannot deactivate your own account.";
+            TempData["ErrorMessage"] = "You cannot deactivate your own account.";
             return RedirectToAction(nameof(Index));
         }
         user.IsActive = !user.IsActive;
         await _db.SaveChangesAsync();
         await _audit.LogAsync("Update", "Users", $"Account '{user.UserName}' {(user.IsActive ? "activated" : "deactivated")}.");
         TempData["SuccessMessage"] = $"Account '{user.UserName}' is now {(user.IsActive ? "active" : "inactive")}.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+        if (user.UserID == User.GetUserId())
+        {
+            TempData["ErrorMessage"] = "You cannot delete your own account.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (user.Role == "Administrator" && await _db.Users.CountAsync(u => u.Role == "Administrator" && u.IsActive) <= 1)
+        {
+            TempData["ErrorMessage"] = "Cannot delete the last active administrator.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        bool hasDependents =
+            await _db.Pets.AnyAsync(p => p.OwnerID == id) ||
+            await _db.Appointments.AnyAsync(a => a.VetID == id) ||
+            await _db.Billings.AnyAsync(b => b.OwnerID == id) ||
+            await _db.Notifications.AnyAsync(n => n.UserID == id) ||
+            await _db.PurchaseRequests.AnyAsync(r => r.RequestedBy == id || r.ProcessedBy == id) ||
+            await _db.AuditLogs.AnyAsync(a => a.UserID == id);
+
+        if (hasDependents)
+        {
+            TempData["ErrorMessage"] =
+                $"Account '{user.UserName}' can't be deleted — it has linked records (pets, appointments, billing, notifications, purchase requests, billing items, audit, etc.). " +
+                "Use Deactivate instead to disable the login while keeping history intact.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _db.Users.Remove(user);
+        await _db.SaveChangesAsync();
+        await _audit.LogAsync("Delete", "Users", $"Deleted account '{user.UserName}' ({user.Role}).");
+        TempData["SuccessMessage"] = $"Account '{user.UserName}' has been deleted.";
         return RedirectToAction(nameof(Index));
     }
 }
