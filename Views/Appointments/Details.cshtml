@@ -38,6 +38,17 @@
                     <div class="col-md-6">
                         <div class="form-hint">SERVICE</div>
                         <div class="cell-strong">@Model.ServiceType</div>
+                        @if (ViewBag.RedeemedFree is VetCare.Models.RewardRedemption freed)
+                        {
+                            <div>
+                                <span class="badge-vc b-ok">FREE</span>
+                                <span class="cell-muted">redeemed with @(freed.PointsSpent) loyalty points</span>
+                            </div>
+                            @if (freed.Status == "Refunded")
+                            {
+                                <div><span class="badge-vc b-neutral">Points refunded</span></div>
+                            }
+                        }
                     </div>
                     <div class="col-12">
                         <div class="form-hint">NOTES</div>

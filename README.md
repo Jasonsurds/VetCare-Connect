@@ -35,9 +35,9 @@ Then open **http://localhost:5194**
 | Role | Username | Password |
 |------|----------|----------|
 | Administrator | `admin`  | `^n@v62XWr8GvLC` |
-| Veterinarian | `vet` / `vet2` | `LrWPmC7mVh^Z9f` / `@jF4*jPnhw5ZRA` |
+| Veterinarian | `vet` | `LrWPmC7mVh^Z9f` |
 | Clinic Staff | `staff` | `NayJT^JyAQkQ6h` |
-| Pet Owner | `owner` / `owner2` | `9ne$t8VfeyJF#q` / `6R#SNfAmNrgWw$` |
+| Pet Owner | `owner` | `9ne$t8VfeyJF#q` |
 | Supplier | `supplier` | `^p*2FZBwggLLs@` |
 
 ## Project structure

@@ -16,6 +16,7 @@ public class VetCareDbContext : DbContext
     public DbSet<BillingItem> BillingItems => Set<BillingItem>();
     public DbSet<VaccinationReminder> VaccinationReminders => Set<VaccinationReminder>();
     public DbSet<CrmRecord> CrmRecords => Set<CrmRecord>();
+    public DbSet<RewardRedemption> RewardRedemptions => Set<RewardRedemption>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
     public DbSet<Report> Reports => Set<Report>();
@@ -114,6 +115,23 @@ public class VetCareDbContext : DbContext
              .WithMany(u => u.CrmRecords)
              .HasForeignKey(c => c.OwnerID)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RewardRedemption>(e =>
+        {
+            e.HasKey(r => r.RedemptionID);
+            e.Property(r => r.RewardType).HasMaxLength(50);
+            e.Property(r => r.Status).HasMaxLength(20);
+            e.Property(r => r.ServiceValue).HasPrecision(10, 2);
+            e.HasOne(r => r.Owner)
+             .WithMany(u => u.RewardRedemptions)
+             .HasForeignKey(r => r.OwnerID)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(r => r.Appointment)
+             .WithOne(a => a.Redemption)
+             .HasForeignKey<RewardRedemption>(r => r.AppointmentID)
+             .OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(r => r.AppointmentID).IsUnique().HasFilter("[AppointmentID] IS NOT NULL");
         });
 
         modelBuilder.Entity<Report>(e =>

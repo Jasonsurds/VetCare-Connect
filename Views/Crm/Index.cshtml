@@ -58,7 +58,20 @@
                                         <div class="cell-muted">“@c.Feedback”</div>
                                     }
                                 </td>
-                                <td><span class="badge-vc b-info">@c.LoyaltyPoints</span></td>
+                                <td>
+                                    @if (c.LoyaltyPoints > 0)
+                                    {
+                                        <span class="badge-vc b-ok">+@c.LoyaltyPoints</span>
+                                    }
+                                    else if (c.LoyaltyPoints < 0)
+                                    {
+                                        <span class="badge-vc b-pending">@c.LoyaltyPoints</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cell-muted">—</span>
+                                    }
+                                </td>
                                 @if (isAdmin)
                                 {
                                     <td style="text-align:right;">
@@ -113,7 +126,10 @@
             <div class="vc-card-head"><h3 class="vc-card-title">Loyalty policy</h3></div>
             <div class="vc-card-body">
                 <p class="page-note mb-2">• <span class="cell-strong">1 point per ₱100</span> is awarded automatically when an invoice is paid.</p>
+                <p class="page-note mb-2">• Owners trade points for a free service — <span class="cell-strong">Grooming 15 pts</span>, <span class="cell-strong">Dental Cleaning 20 pts</span> — from the Redeem Rewards page.</p>
+                <p class="page-note mb-2">• Cancelling or deleting a reward appointment returns the points automatically.</p>
                 <p class="page-note mb-0">• Staff can grant bonus points from <a asp-action="Create" class="text-teal">Log interaction</a>.</p>
+                <div class="mt-3"><a class="btn-vc-outline btn-vc-sm" asp-controller="Rewards" asp-action="Index">View redemptions</a></div>
             </div>
         </div>
     </div>

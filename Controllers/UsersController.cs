@@ -99,6 +99,7 @@ public class UsersController : Controller
         if (user == null) return NotFound();
 
         var oldRole = user.Role;
+        var statusChanged = user.IsActive != isActive;
         user.Name = name;
         user.Role = role;
         user.Email = email;
@@ -108,6 +109,8 @@ public class UsersController : Controller
             user.Password = _hasher.HashPassword(user, newPassword);
 
         await _db.SaveChangesAsync();
+        if (statusChanged)
+            await SendAccountStatusNotificationAsync(user);
         await _audit.LogAsync("Update", "Users", $"Updated account '{user.UserName}' (role: {oldRole} → {role}).");
         TempData["SuccessMessage"] = $"Account '{user.UserName}' has been updated.";
         return RedirectToAction(nameof(Index));
@@ -126,9 +129,27 @@ public class UsersController : Controller
         }
         user.IsActive = !user.IsActive;
         await _db.SaveChangesAsync();
+        await SendAccountStatusNotificationAsync(user);
         await _audit.LogAsync("Update", "Users", $"Account '{user.UserName}' {(user.IsActive ? "activated" : "deactivated")}.");
         TempData["SuccessMessage"] = $"Account '{user.UserName}' is now {(user.IsActive ? "active" : "inactive")}.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task SendAccountStatusNotificationAsync(User user)
+    {
+        var (title, message) = user.IsActive
+            ? ("Account Reactivated", $"Your VetCare Connect account has been reactivated by an administrator. You can now sign in and use the system again.")
+            : ("Account Deactivated", $"Your VetCare Connect account has been deactivated by an administrator. Sign-in and appointment booking are disabled until the account is reactivated. Please contact the clinic for assistance.");
+
+        _db.Notifications.Add(new Notification
+        {
+            UserID = user.UserID,
+            Title = title,
+            Message = message,
+            Category = "System",
+            ActionUrl = "/Account/Login"
+        });
+        await _db.SaveChangesAsync();
     }
 
     [HttpPost]

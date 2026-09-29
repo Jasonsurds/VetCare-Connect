@@ -5,7 +5,7 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-lg-9">
+    <div class="col-lg-11">
         <div class="vc-card">
             <div class="vc-card-head">
                 <div>
@@ -15,17 +15,27 @@
                 <span class="badge-vc @(Model.ReportType == "Clinical" ? "b-info" : Model.ReportType == "Financial" ? "b-paid" : "b-pending")">@Model.ReportType</span>
             </div>
             <div class="vc-card-body">
-                <pre class="mono-pre">@Model.Content</pre>
-                <div class="d-flex gap-2 mt-4 flex-wrap">
-                    <a class="btn-vc-outline" asp-action="Index">← Back to reports</a>
-                    <a class="btn-vc-outline" asp-action="Generate">Generate another</a>
+                <div class="d-flex gap-2 mb-4 flex-wrap">
+                    <button type="button" class="btn-vc d-print-none" onclick="window.print()">🖨️ Print / Save as PDF</button>
+                    <a class="btn-vc-outline d-print-none" asp-action="Index">← Back to reports</a>
+                    <a class="btn-vc-outline d-print-none" asp-action="Generate">Generate another</a>
                     @if (isAdmin)
                     {
-                        <form asp-action="Delete" method="post" data-confirm="Delete this report?">
+                        <form asp-action="Delete" method="post" class="d-print-none" data-confirm="Delete this report?">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.ReportID" />
                             <button class="btn-vc-outline btn-vc-danger" type="submit">Delete</button>
                         </form>
+                    }
+                </div>
+                <div class="report-document">
+                    @if (Model.Content.TrimStart().StartsWith("<"))
+                    {
+                        @Html.Raw(Model.Content)
+                    }
+                    else
+                    {
+                        <pre class="report-legacy">@Model.Content</pre>
                     }
                 </div>
             </div>

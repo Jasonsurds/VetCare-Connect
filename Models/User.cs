@@ -17,4 +17,5 @@ public class User
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     public ICollection<Billing> Invoices { get; set; } = new List<Billing>();
     public ICollection<CrmRecord> CrmRecords { get; set; } = new List<CrmRecord>();
+    public ICollection<RewardRedemption> RewardRedemptions { get; set; } = new List<RewardRedemption>();
 }

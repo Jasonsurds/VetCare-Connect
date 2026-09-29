@@ -1,8 +1,12 @@
 @model IEnumerable<VetCare.Models.CrmRecord>
+@using VetCare.Services
 @{
     Layout = "_DashboardLayout";
     var totalPoints = (int)(ViewBag.TotalPoints ?? 0);
-    var nextReward = 500;
+    var rewards = RewardCatalog.Available
+        .Select(name => new { Name = name, Cost = RewardCatalog.CostFor(name), Value = RewardCatalog.ValueOf(name) })
+        .ToList();
+    var nextGoal = rewards.Where(r => totalPoints < r.Cost).OrderBy(r => r.Cost).FirstOrDefault();
 }
 
 <div class="row g-4">
@@ -11,18 +15,49 @@
             <div class="vc-card-body text-center" style="color:#fff;">
                 <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.9;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                 <div class="stat-number" style="color:#fff; font-size:2.4rem;">@totalPoints</div>
-                <div style="opacity:.9; font-weight:600; font-size:.85rem;">loyalty points earned</div>
+                <div style="opacity:.9; font-weight:600; font-size:.85rem;">loyalty points available</div>
                 <hr style="border-color:rgba(255,255,255,.25); margin:16px 0;" />
                 <div style="font-size:.85rem;">
-                    @if (totalPoints >= nextReward)
+                    @if (nextGoal == null)
                     {
-                        <span>🎉 You've reached a reward tier — mention it at the front desk!</span>
+                        <span>🎉 You can redeem every reward right now!</span>
                     }
                     else
                     {
-                        <span>@(nextReward - totalPoints) more points until your next reward tier.</span>
+                        <span>@(nextGoal.Cost - totalPoints) more points to unlock a free @(nextGoal.Name).</span>
                     }
                 </div>
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">Rewards you can redeem</h3></div>
+            <div class="vc-card-body p-0">
+                <table class="vc-table">
+                    <tbody>
+                    @foreach (var r in rewards)
+                    {
+                        var affordable = totalPoints >= r.Cost;
+                        <tr>
+                            <td>
+                                <div class="cell-strong">@r.Name</div>
+                                <div class="cell-muted">Worth @($"₱{r.Value:N2}")</div>
+                            </td>
+                            <td style="text-align:right; vertical-align:middle;">
+                                <div class="cell-strong">@r.Cost pts</div>
+                                @if (affordable)
+                                {
+                                    <a class="btn-vc-outline btn-vc-sm" asp-controller="Rewards" asp-action="Redeem" asp-route-rewardType="@r.Name">Redeem</a>
+                                }
+                                else
+                                {
+                                    <span class="badge-vc b-pending">Not enough</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -63,7 +98,20 @@
                                         <div class="cell-muted">Your feedback: “@c.Feedback”</div>
                                     }
                                 </td>
-                                <td><span class="badge-vc b-info">+@c.LoyaltyPoints</span></td>
+                                <td>
+                                    @if (c.LoyaltyPoints > 0)
+                                    {
+                                        <span class="badge-vc b-ok">+@c.LoyaltyPoints</span>
+                                    }
+                                    else if (c.LoyaltyPoints < 0)
+                                    {
+                                        <span class="badge-vc b-pending">@c.LoyaltyPoints</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cell-muted">—</span>
+                                    }
+                                </td>
                             </tr>
                         }
                         </tbody>

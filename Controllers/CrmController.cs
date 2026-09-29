@@ -14,11 +14,13 @@ public class CrmController : Controller
 {
     private readonly VetCareDbContext _db;
     private readonly IAuditService _audit;
+    private readonly ILoyaltyService _loyalty;
 
-    public CrmController(VetCareDbContext db, IAuditService audit)
+    public CrmController(VetCareDbContext db, IAuditService audit, ILoyaltyService loyalty)
     {
         _db = db;
         _audit = audit;
+        _loyalty = loyalty;
     }
 
     [Authorize(Roles = "Administrator, Clinic Staff")]
@@ -53,7 +55,7 @@ public class CrmController : Controller
             .OrderByDescending(c => c.InteractionDate)
             .ToListAsync();
 
-        ViewBag.TotalPoints = records.Sum(r => r.LoyaltyPoints);
+        ViewBag.TotalPoints = await _loyalty.GetBalanceAsync(ownerId);
         ViewData["Title"] = "Loyalty & Feedback";
         ViewData["DashTitle"] = "Loyalty & Feedback";
         return View("My", records);

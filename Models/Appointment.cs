@@ -15,4 +15,5 @@ public class Appointment
     public User? Vet { get; set; }
     public TreatmentRecord? TreatmentRecord { get; set; }
     public Billing? Billing { get; set; }
+    public RewardRedemption? Redemption { get; set; }
 }

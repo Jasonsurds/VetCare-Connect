@@ -3,6 +3,7 @@
     Layout = "_DashboardLayout";
     var role = User.GetUserRole();
     var isOwner = role == "Pet Owner";
+    var redemption = Model.Appointment?.Redemption;
 }
 
 <div class="row justify-content-center">
@@ -39,8 +40,22 @@
                                 <div class="cell-strong">@Model.Appointment?.ServiceType</div>
                                 <div class="cell-muted">Appointment #@Model.AppointmentID · @Model.Appointment?.AppointmentDate.ToString("MMM dd, yyyy") · Dr. @Model.Appointment?.Vet?.Name</div>
                                 <div class="cell-muted">Pet: @Model.Appointment?.Pet?.PetName (@Model.Appointment?.Pet?.Species)</div>
+                                @if (redemption != null)
+                                {
+                                    <div><span class="badge-vc b-ok">Free service</span> <span class="cell-muted">covered by @(redemption.PointsSpent) loyalty points</span></div>
+                                }
                             </td>
-                            <td style="text-align:right;" class="cell-strong">@($"₱{Model.TotalAmount - Model.Items.Sum(i => i.LineTotal):N2}")</td>
+                            <td style="text-align:right;" class="cell-strong">
+                                @if (redemption != null)
+                                {
+                                    <div class="cell-muted" style="text-decoration:line-through;">@($"₱{redemption.ServiceValue:N2}")</div>
+                                    <div>₱0.00</div>
+                                }
+                                else
+                                {
+                                    <div>@($"₱{Model.TotalAmount - Model.Items.Sum(i => i.LineTotal):N2}")</div>
+                                }
+                            </td>
                         </tr>
                         @foreach (var line in Model.Items)
                         {
@@ -64,7 +79,7 @@
                         <span class="form-hint">PAYMENT METHOD</span> <span class="cell-strong">@Model.PaymentMethod</span>
                     </div>
                     <div class="d-flex gap-2">
-                        @if (Model.PaymentStatus == "Pending" && role is "Administrator" or "Clinic Staff")
+                        @if (Model.PaymentStatus == "Pending" && role is "Administrator" or "Clinic Staff" && Model.TotalAmount > 0)
                         {
                             <form asp-action="MarkPaid" method="post" class="d-flex gap-2" id="payForm">
                                 @Html.AntiForgeryToken()
@@ -80,7 +95,11 @@
                         <a class="btn-vc-outline" asp-action="Index">Back to invoices</a>
                     </div>
                 </div>
-                @if (isOwner && Model.PaymentStatus == "Pending")
+                @if (redemption != null && Model.TotalAmount <= 0)
+                {
+                    <p class="page-note mt-3 mb-0">🎉 Nothing to settle — this service was fully covered by your loyalty points.</p>
+                }
+                else if (isOwner && Model.PaymentStatus == "Pending")
                 {
                     <p class="page-note mt-3 mb-0">Please settle this invoice at the clinic's front desk.</p>
                 }

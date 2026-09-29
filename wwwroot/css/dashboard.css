@@ -731,15 +731,108 @@ textarea.form-control-vc { height: auto; min-height: 90px; resize: vertical; }
 
 .chart-wrap { position: relative; height: 280px; }
 
-.mono-pre {
-    background: #084338;
-    color: #d1fae5;
+/* ===== Modernized reports (black on white, print-ready) ===== */
+.report-document {
+    font-family: var(--font-sans);
+    color: #111;
+    line-height: 1.55;
+}
+
+.report-dateline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.report-section {
+    margin-top: 22px;
+}
+
+.report-legacy {
+    background: #ffffff;
+    color: #111;
+    font-size: 0.88rem;
+    border: 1px solid var(--border-light);
     border-radius: 14px;
     padding: 18px 20px;
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
+    font-family: Consolas, 'Courier New', monospace;
+}
+
+/* ===== Print: black on white, app chrome hidden ===== */
+@media print {
+    body {
+        background: #ffffff !important;
+    }
+
+    .dash-shell {
+        display: block !important;
+        background: #ffffff !important;
+    }
+
+    .dash-sidebar,
+    .dash-topbar,
+    .dash-paw-watermark,
+    .dash-alert,
+    .notif-dropdown-wrapper,
+    .btn-site-link,
+    .dash-title-sub {
+        display: none !important;
+    }
+
+    .dash-main {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+
+    .dash-content {
+        padding: 0 !important;
+    }
+
+    .vc-card {
+        box-shadow: none !important;
+        border: none !important;
+        margin-bottom: 0 !important;
+    }
+
+    .vc-card-head {
+        border-bottom: 2px solid #111 !important;
+    }
+
+    .stat-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .stat-icon {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .report-document,
+    .report-document * {
+        color: #000 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    .badge-vc {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    a {
+        color: #000 !important;
+        text-decoration: none !important;
+    }
 }
 
 .page-note { font-size: 0.8rem; color: var(--text-muted); }

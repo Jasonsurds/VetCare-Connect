@@ -72,6 +72,27 @@ public static class DbInitializer
                     CREATE INDEX [IX_PurchaseRequests_RequestedBy] ON [PurchaseRequests] ([RequestedBy]);
                 END
             ");
+            context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'RewardRedemptions')
+                BEGIN
+                    CREATE TABLE [RewardRedemptions] (
+                        [RedemptionID] int NOT NULL IDENTITY,
+                        [OwnerID] int NOT NULL,
+                        [RewardType] nvarchar(50) NOT NULL,
+                        [PointsSpent] int NOT NULL,
+                        [ServiceValue] decimal(10,2) NOT NULL,
+                        [Status] nvarchar(20) NOT NULL,
+                        [AppointmentID] int NULL,
+                        [RedeemedAt] datetime2 NOT NULL,
+                        [CompletedAt] datetime2 NULL,
+                        CONSTRAINT [PK_RewardRedemptions] PRIMARY KEY ([RedemptionID]),
+                        CONSTRAINT [FK_RewardRedemptions_Users_OwnerID] FOREIGN KEY ([OwnerID]) REFERENCES [Users] ([UserID]),
+                        CONSTRAINT [FK_RewardRedemptions_Appointments_AppointmentID] FOREIGN KEY ([AppointmentID]) REFERENCES [Appointments] ([AppointmentID]) ON DELETE SET NULL
+                    );
+                    CREATE UNIQUE INDEX [IX_RewardRedemptions_AppointmentID] ON [RewardRedemptions] ([AppointmentID]) WHERE [AppointmentID] IS NOT NULL;
+                    CREATE INDEX [IX_RewardRedemptions_OwnerID] ON [RewardRedemptions] ([OwnerID]);
+                END
+            ");
         }
         catch { /* ignore if already created or managed by EF */ }
 
@@ -90,10 +111,8 @@ public static class DbInitializer
         context.Users.AddRange(
             NewUser("Administrator", "Dr. Amelia Cruz", "admin", "^n@v62XWr8GvLC", "admin@vetcare.com"),
             NewUser("Veterinarian", "Dr. Sarah Chen", "vet", "LrWPmC7mVh^Z9f", "vet@vetcare.com", "0917-100-2000"),
-            NewUser("Veterinarian", "Dr. Marco Reyes", "vet2", "@jF4*jPnhw5ZRA", "vet2@vetcare.com", "0917-100-2001"),
-            NewUser("Clinic Staff", "Grace Lim", "staff", "NayJT^JvyAQkQ6h", "staff@vetcare.com", "0917-100-3000"),
+            NewUser("Clinic Staff", "Grace Lim", "staff", "NayJT^JyAQkQ6h", "staff@vetcare.com", "0917-100-3000"),
             NewUser("Pet Owner", "Jason Surdilla", "owner", "9ne$t8VfeyJF#q", "owner@vetcare.com", "0917-100-4000", "123 Mabini St., Quezon City"),
-            NewUser("Pet Owner", "Maria Santos", "owner2", "6R#SNfAmNrgWw$", "owner2@vetcare.com", "0917-100-4001", "45 Rizal Ave., Makati City"),
             NewUser("Supplier", "VetSupply Co.", "supplier", "^p*2FZBwggLLs@", "supplier@vetcare.com"));
 
         context.SaveChanges();

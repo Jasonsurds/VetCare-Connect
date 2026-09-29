@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VetCare.Data;
 using VetCare.Helpers;
+using VetCare.Services;
 
 namespace VetCare.Controllers;
 
@@ -10,8 +11,13 @@ namespace VetCare.Controllers;
 public class DashboardController : Controller
 {
     private readonly VetCareDbContext _db;
+    private readonly ILoyaltyService _loyalty;
 
-    public DashboardController(VetCareDbContext db) => _db = db;
+    public DashboardController(VetCareDbContext db, ILoyaltyService loyalty)
+    {
+        _db = db;
+        _loyalty = loyalty;
+    }
 
     public IActionResult Index()
     {
@@ -174,9 +180,7 @@ public class DashboardController : Controller
                 .OrderBy(v => v.DueDate)
                 .Take(5)
                 .ToListAsync(),
-            LoyaltyPoints = await _db.CrmRecords
-                .Where(c => c.OwnerID == ownerId)
-                .SumAsync(c => (int?)c.LoyaltyPoints) ?? 0
+            LoyaltyPoints = await _loyalty.GetBalanceAsync(ownerId)
         };
 
         ViewData["Title"] = "Pet Owner Dashboard";

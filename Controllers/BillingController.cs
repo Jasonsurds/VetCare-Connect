@@ -15,12 +15,14 @@ public class BillingController : Controller
     private readonly VetCareDbContext _db;
     private readonly IAuditService _audit;
     private readonly INotificationService _notif;
+    private readonly ILoyaltyService _loyalty;
 
-    public BillingController(VetCareDbContext db, IAuditService audit, INotificationService notif)
+    public BillingController(VetCareDbContext db, IAuditService audit, INotificationService notif, ILoyaltyService loyalty)
     {
         _db = db;
         _audit = audit;
         _notif = notif;
+        _loyalty = loyalty;
     }
 
     public async Task<IActionResult> Index(string? status, int page = 1)
@@ -61,6 +63,7 @@ public class BillingController : Controller
             .Include(b => b.Owner)
             .Include(b => b.Appointment).ThenInclude(a => a!.Pet)
             .Include(b => b.Appointment).ThenInclude(a => a!.Vet)
+            .Include(b => b.Appointment).ThenInclude(a => a!.Redemption)
             .Include(b => b.Items)
             .FirstOrDefaultAsync(b => b.InvoiceID == id);
         if (invoice == null) return NotFound();
@@ -136,6 +139,13 @@ public class BillingController : Controller
             .FirstOrDefaultAsync(b => b.InvoiceID == id);
         if (invoice == null) return NotFound();
 
+        // Without this guard a re-submitted form awards the loyalty points twice.
+        if (invoice.PaymentStatus == "Paid")
+        {
+            TempData["SuccessMessage"] = $"Invoice #INV-{invoice.InvoiceID:D4} is already marked as paid.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
         if (!string.IsNullOrWhiteSpace(paymentMethod))
             invoice.PaymentMethod = paymentMethod;
 
@@ -146,14 +156,8 @@ public class BillingController : Controller
         var points = (int)(invoice.TotalAmount / 100m);
         if (points > 0)
         {
-            _db.CrmRecords.Add(new CrmRecord
-            {
-                OwnerID = invoice.OwnerID,
-                Interaction = $"Invoice #INV-{invoice.InvoiceID:D4} paid ({invoice.PaymentMethod}). Loyalty points awarded.",
-                LoyaltyPoints = points,
-                InteractionDate = DateTime.Now
-            });
-            await _db.SaveChangesAsync();
+            await _loyalty.AwardAsync(invoice.OwnerID, points,
+                $"Invoice #INV-{invoice.InvoiceID:D4} paid ({invoice.PaymentMethod}). Loyalty points awarded.");
         }
 
         await _audit.LogAsync("Update", "Billing", $"Invoice #INV-{invoice.InvoiceID:D4} marked as Paid ({invoice.PaymentMethod}). {points} loyalty points awarded.");

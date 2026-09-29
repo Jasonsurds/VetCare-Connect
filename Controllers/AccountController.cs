@@ -51,10 +51,17 @@ namespace VetCare.Controllers
             var user = await _db.Users.FirstOrDefaultAsync(u =>
                 u.UserName == lookup || (u.Email != null && u.Email == lookup));
 
-            if (user == null || !user.IsActive)
+            if (user == null)
             {
                 await _audit.LogAsync("Login Failed", "Users", $"Invalid login attempt for '{lookup}'.", lookup);
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
+                return View();
+            }
+
+            if (!user.IsActive)
+            {
+                await _audit.LogAsync("Login Failed", "Users", $"Sign-in blocked — account '{user.UserName}' is deactivated.", user.Name);
+                ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact the clinic to restore access.");
                 return View();
             }
 

@@ -15,12 +15,14 @@ public class AppointmentsController : Controller
     private readonly VetCareDbContext _db;
     private readonly IAuditService _audit;
     private readonly INotificationService _notif;
+    private readonly ILoyaltyService _loyalty;
 
-    public AppointmentsController(VetCareDbContext db, IAuditService audit, INotificationService notif)
+    public AppointmentsController(VetCareDbContext db, IAuditService audit, INotificationService notif, ILoyaltyService loyalty)
     {
         _db = db;
         _audit = audit;
         _notif = notif;
+        _loyalty = loyalty;
     }
 
     public static readonly string[] ServiceTypes =
@@ -85,6 +87,9 @@ public class AppointmentsController : Controller
         if (!allowed) return Forbid();
 
         ViewBag.InventoryItems = await _db.InventoryItems.OrderBy(i => i.ItemName).ToListAsync();
+        ViewBag.RedeemedFree = await _db.RewardRedemptions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.AppointmentID == appointment.AppointmentID);
         ViewData["Title"] = $"Appointment #{appointment.AppointmentID}";
         ViewData["DashTitle"] = $"Appointment #{appointment.AppointmentID}";
         return View(appointment);
@@ -92,6 +97,12 @@ public class AppointmentsController : Controller
 
     public async Task<IActionResult> Create(int? petId)
     {
+        if (!await IsCurrentUserActiveAsync())
+        {
+            TempData["ErrorMessage"] = "Your account has been deactivated. Booking appointments is currently disabled. Please contact the clinic.";
+            return RedirectToAction(nameof(Index));
+        }
+
         await PopulateDropdownsAsync();
         ViewBag.SelectedPetId = petId;
         ViewData["Title"] = "Book Appointment";
@@ -103,6 +114,12 @@ public class AppointmentsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int petId, int vetId, DateTime appointmentDate, string serviceType, string? notes)
     {
+        if (!await IsCurrentUserActiveAsync())
+        {
+            TempData["ErrorMessage"] = "Your account has been deactivated. Booking appointments is currently disabled. Please contact the clinic.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var role = User.GetUserRole();
 
         var pet = await _db.Pets.FirstOrDefaultAsync(p => p.PetID == petId);
@@ -148,7 +165,7 @@ public class AppointmentsController : Controller
         await _db.SaveChangesAsync();
 
         await _audit.LogAsync("Create", "Appointments",
-            $"Appointment #{appointment.AppointmentID} booked for pet '{pet.PetName}' on {appointment.AppointmentDate:g}.");
+            $"Appointment #{appointment.AppointmentID} booked for pet '{pet!.PetName}' on {appointment.AppointmentDate:g}.");
 
         // Dispatch Notifications
         var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";
@@ -338,11 +355,15 @@ public class AppointmentsController : Controller
         await _db.SaveChangesAsync();
 
         // Automatically forward the consultation bill to Billing (front desk) for invoicing.
+        // A visit paid for with loyalty points is billed at zero.
+        var redemption = await _db.RewardRedemptions
+            .FirstOrDefaultAsync(r => r.AppointmentID == appointment.AppointmentID && r.Status == "Booked");
+
         var billNote = string.Empty;
         var bill = await _db.Billings.FirstOrDefaultAsync(b => b.AppointmentID == id);
         if (bill == null)
         {
-            var fee = ServiceFees.GetFee(appointment.ServiceType);
+            var fee = redemption != null ? 0m : ServiceFees.GetFee(appointment.ServiceType);
             bill = new Billing
             {
                 AppointmentID = appointment.AppointmentID,
@@ -354,7 +375,16 @@ public class AppointmentsController : Controller
             };
             _db.Billings.Add(bill);
             await _db.SaveChangesAsync();
-            billNote = $" The bill (₱{fee:N2}) has been sent to Billing — the front desk will issue it to the owner.";
+            billNote = redemption != null
+                ? $" Free service applied — the owner redeemed {redemption!.PointsSpent} loyalty points, so the bill is ₱0.00."
+                : $" The bill (₱{fee:N2}) has been sent to Billing — the front desk will issue it to the owner.";
+        }
+
+        if (redemption != null)
+        {
+            redemption.Status = "Completed";
+            redemption.CompletedAt = DateTime.Now;
+            await _db.SaveChangesAsync();
         }
 
         // Add medicine line items to the invoice and deduct them from inventory.
@@ -381,14 +411,18 @@ public class AppointmentsController : Controller
             billNote += $" {selected.Count} medicine(s) (₱{medTotal:N2}) were added to the invoice and deducted from inventory.";
         }
 
-        await _audit.LogAsync("Update", "Appointments", $"Appointment #{id} marked as Completed. Bill forwarded to Billing (incl. {selected.Count} medicine line item(s)).");
+        await _audit.LogAsync("Update", "Appointments", redemption != null
+            ? $"Appointment #{id} marked as Completed. Free {redemption.RewardType} applied via redemption #{redemption.RedemptionID} ({redemption.PointsSpent} pts). Bill forwarded to Billing (incl. {selected.Count} medicine line item(s))."
+            : $"Appointment #{id} marked as Completed. Bill forwarded to Billing (incl. {selected.Count} medicine line item(s)).");
 
         // Notify Owner
         var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";
         if (appointment.Pet != null)
         {
             await _notif.SendAsync(appointment.Pet.OwnerID, "Visit Completed 🐾",
-                $"Your pet '{appointment.Pet.PetName}' visit on {appointment.AppointmentDate:g} has been marked as completed. Treatment records and invoices are now available.",
+                redemption != null
+                    ? $"Your free {appointment.ServiceType} for '{appointment.Pet.PetName}' on {appointment.AppointmentDate:g} is complete — thank you for your loyalty! No charge for the service."
+                    : $"Your pet '{appointment.Pet.PetName}' visit on {appointment.AppointmentDate:g} has been marked as completed. Treatment records and invoices are now available.",
                 "Appointment", detailsUrl);
         }
 
@@ -412,6 +446,17 @@ public class AppointmentsController : Controller
         appointment.Status = "Cancelled";
         await _db.SaveChangesAsync();
         await _audit.LogAsync("Update", "Appointments", $"Appointment #{id} cancelled by {role}.");
+
+        // Points spent on a free service come back if the visit never happens.
+        var redemption = await _db.RewardRedemptions
+            .FirstOrDefaultAsync(r => r.AppointmentID == id && r.Status == "Booked");
+        if (redemption != null)
+        {
+            await _loyalty.RefundAsync(redemption.RedemptionID, "The reward appointment was cancelled.");
+            await _notif.SendAsync(appointment.Pet!.OwnerID, "Loyalty Points Returned ↩️",
+                $"The reward appointment for '{appointment.ServiceType}' was cancelled, so {redemption.PointsSpent} loyalty points have been returned to your balance.",
+                "General", $"/Crm/My");
+        }
 
         var detailsUrl = $"/Appointments/Details/{appointment.AppointmentID}";
         if (role == "Pet Owner")
@@ -455,6 +500,7 @@ public class AppointmentsController : Controller
             return Forbid();
 
         var summary = $"#{appointment.AppointmentID} ({appointment.ServiceType} for {appointment.Pet!.PetName}, {appointment.AppointmentDate:g})";
+        await RefundRewardIfAnyAsync(appointment.AppointmentID, "The reward appointment was deleted.");
         _db.Appointments.Remove(appointment);
         await _db.SaveChangesAsync();
         await _audit.LogAsync("Delete", "Appointments", $"Appointment {summary} deleted by {role}.");
@@ -462,12 +508,28 @@ public class AppointmentsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    private async Task RefundRewardIfAnyAsync(int appointmentId, string reason)
+    {
+        var redemption = await _db.RewardRedemptions
+            .FirstOrDefaultAsync(r => r.AppointmentID == appointmentId && r.Status == "Booked");
+        if (redemption == null) return;
+
+        await _loyalty.RefundAsync(redemption.RedemptionID, reason);
+        await _notif.SendAsync(redemption.OwnerID, "Loyalty Points Returned ↩️",
+            $"{redemption.PointsSpent} loyalty points for the free {redemption.RewardType} have been returned to your balance.",
+            "General", "/Crm/My");
+    }
+
+    private async Task<bool> IsCurrentUserActiveAsync()
+    {
+        var user = await _db.Users.FindAsync(User.GetUserId());
+        return user != null && user.IsActive;
+    }
+
     private async Task PopulateDropdownsAsync()
     {
         var role = User.GetUserRole();
         var vetsQuery = _db.Users.Where(u => u.Role == "Veterinarian" && u.IsActive);
-        if (role == "Pet Owner")
-            vetsQuery = vetsQuery.Where(u => u.Name != "Dr. Marco Reyes");
         var vets = await vetsQuery.OrderBy(u => u.Name)
             .Select(u => new { u.UserID, u.Name })
             .ToListAsync();

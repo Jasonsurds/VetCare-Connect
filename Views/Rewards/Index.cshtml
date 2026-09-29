@@ -1,0 +1,79 @@
+@model IEnumerable<VetCare.Models.RewardRedemption>
+@{
+    Layout = "_DashboardLayout";
+    var status = ViewBag.Status as string ?? "All";
+    var statuses = new[] { "All", "Booked", "Completed", "Refunded" };
+}
+
+<div class="filter-row">
+    <div class="d-flex gap-2 flex-wrap">
+        @foreach (var s in statuses)
+        {
+            <a class="btn-vc-outline @(status == s ? "active" : "")" asp-action="Index" asp-route-status="@s">@s</a>
+        }
+    </div>
+    <a class="btn-vc-outline ms-auto" asp-controller="Crm" asp-action="Index">← Customer CRM</a>
+</div>
+
+<div class="vc-card">
+    <div class="vc-card-head">
+        <div>
+            <h3 class="vc-card-title">Reward redemptions (@Model.Count())</h3>
+            <div class="dash-title-sub">Free services owners have paid for with loyalty points.</div>
+        </div>
+    </div>
+    <div class="vc-card-body p-0 table-scroll">
+        @if (Model.Any())
+        {
+            <table class="vc-table">
+                <thead>
+                    <tr>
+                        <th>Redeemed</th>
+                        <th>Owner</th>
+                        <th>Reward</th>
+                        <th>Appointment</th>
+                        <th>Points</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td class="cell-muted">@r.RedeemedAt.ToString("MMM dd, yyyy")<div class="cell-muted">@r.RedeemedAt.ToString("h:mm tt")</div></td>
+                        <td class="cell-strong">@r.Owner?.Name</td>
+                        <td>
+                            <div class="cell-strong">@r.RewardType</div>
+                            <div class="cell-muted">Worth @($"₱{r.ServiceValue:N2}")</div>
+                        </td>
+                        <td>
+                            @if (r.AppointmentID.HasValue)
+                            {
+                                <a class="cell-strong" asp-controller="Appointments" asp-action="Details" asp-route-id="@r.AppointmentID">#@r.AppointmentID</a>
+                                <div class="cell-muted">@r.Appointment?.Pet?.PetName · @r.Appointment?.AppointmentDate.ToString("MMM dd")</div>
+                            }
+                            else
+                            {
+                                <span class="cell-muted">Appointment removed</span>
+                            }
+                        </td>
+                        <td class="cell-strong">−@r.PointsSpent</td>
+                        <td>
+                            <span class="badge-vc @(r.Status switch
+                            {
+                                "Completed" => "b-ok",
+                                "Refunded" => "b-neutral",
+                                _ => "b-pending"
+                            })">@r.Status</span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state"><p>No reward redemptions @(status == "All" ? "" : $"with status '{status}'") yet.</p></div>
+        }
+    </div>
+</div>

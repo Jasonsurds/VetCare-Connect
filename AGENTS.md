@@ -26,10 +26,8 @@ dotnet run
 |---------------|------------|--------------|
 | Administrator | `admin`  | `^n@v62XWr8GvLC` |
 | Veterinarian  | `vet`    | `LrWPmC7mVh^Z9f` |
-| Veterinarian  | `vet2`   | `@jF4*jPnhw5ZRA` |
 | Clinic Staff  | `staff`  | `NayJT^JyAQkQ6h` |
 | Pet Owner     | `owner`  | `9ne$t8VfeyJF#q` |
-| Pet Owner     | `owner2` | `6R#SNfAmNrgWw$` |
 | Supplier      | `supplier` | `^p*2FZBwggLLs@` |
 
 ## Project layout

@@ -1,0 +1,152 @@
+@model VetCare.Controllers.RedeemRewardViewModel
+@{
+    Layout = "_DashboardLayout";
+    var nextGoal = Model.Rewards.Where(r => Model.Balance < r.Cost).OrderBy(r => r.Cost).FirstOrDefault();
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="vc-card" style="background: linear-gradient(120deg, #0b5e52 0%, #20a390 100%); border: none;">
+            <div class="vc-card-body text-center" style="color:#fff;">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.9;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <div class="stat-number" style="color:#fff; font-size:2.4rem;">@Model.Balance</div>
+                <div style="opacity:.9; font-weight:600; font-size:.85rem;">loyalty points available</div>
+                <hr style="border-color:rgba(255,255,255,.25); margin:16px 0;" />
+                <div style="font-size:.85rem;">
+                    @if (nextGoal == null && Model.Rewards.Count > 0)
+                    {
+                        <span>🎉 You can redeem every reward right now!</span>
+                    }
+                    else if (nextGoal != null)
+                    {
+                        <span>@(nextGoal.Cost - Model.Balance) more points to unlock a free @(nextGoal.Name).</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">Available rewards</h3></div>
+            <div class="vc-card-body p-0">
+                <table class="vc-table">
+                    <tbody>
+                    @foreach (var r in Model.Rewards)
+                    {
+                        var affordable = Model.Balance >= r.Cost;
+                        <tr>
+                            <td>
+                                <div class="cell-strong">@r.Name</div>
+                                <div class="cell-muted">Worth @($"₱{r.Value:N2}")</div>
+                            </td>
+                            <td style="text-align:right; vertical-align:middle;">
+                                <div class="cell-strong">@r.Cost pts</div>
+                                <span class="badge-vc @(affordable ? "b-ok" : "b-pending")">@(affordable ? "Available" : "Not enough")</span>
+                                @if (affordable)
+                                {
+                                    <div class="mt-2">
+                                        <a class="btn-vc-outline btn-vc-sm" asp-action="Redeem" asp-route-rewardType="@r.Name">Choose</a>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <div class="vc-card-head"><h3 class="vc-card-title">How it works</h3></div>
+            <div class="vc-card-body">
+                <p class="page-note mb-2">• You earn <span class="cell-strong">1 point per ₱100</span> automatically when an invoice is paid.</p>
+                <p class="page-note mb-2">• Choose a reward, pick a slot, and the points are deducted straight away.</p>
+                <p class="page-note mb-0">• Cancel or delete the booking and your points are returned automatically.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="vc-card">
+            <div class="vc-card-head">
+                <div>
+                    <h3 class="vc-card-title">Redeem a free service</h3>
+                    <div class="dash-title-sub">Book the appointment in one step.</div>
+                </div>
+                <a class="vc-card-link" asp-controller="Crm" asp-action="My">← Loyalty &amp; feedback</a>
+            </div>
+            <div class="vc-card-body">
+                @if (!Model.HasPets)
+                {
+                    <div class="empty-state">
+                        <p>You need a pet on file before you can redeem a reward. <a asp-controller="Pets" asp-action="Index" class="text-teal">Add a pet</a> first.</p>
+                    </div>
+                }
+                else
+                {
+                    <form asp-action="Redeem" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-vc">Reward *</label>
+                                <select name="rewardType" class="form-control-vc" required>
+                                    <option value="">— Select reward —</option>
+                                    @foreach (var r in Model.Rewards)
+                                    {
+                                        <option value="@r.Name" selected="@(Model.RewardType == r.Name)">
+                                            @r.Name — @r.Cost pts (worth ₱@r.Value.ToString("N2"))
+                                        </option>
+                                    }
+                                </select>
+                                <div class="form-hint">
+                                    @if (Model.Cost > 0)
+                                    {
+                                        <span>Selected: <span class="cell-strong">@Model.Cost points</span>. @(Model.CanAfford ? "You can afford this." : "You do not have enough points yet.")</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Pick a reward to see its point cost.</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-vc">Pet *</label>
+                                <select id="petId" name="petId" class="form-control-vc" asp-items="ViewBag.PetID" required>
+                                    <option value="">— Select pet —</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-vc">Veterinarian *</label>
+                                <select id="vetId" name="vetId" class="form-control-vc" asp-items="ViewBag.VetID" required>
+                                    <option value="">— Select veterinarian —</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-vc">Preferred date &amp; time *</label>
+                                <input type="date" id="appDate" class="form-control-vc" required />
+                                <input type="hidden" id="appointmentDate" name="appointmentDate" />
+                                <div id="selTime" class="form-hint mt-1 d-none">Selected time: <span class="cell-strong" style="font-weight:800;"></span></div>
+                                <div class="form-hint">Clinic hours: 8:00 AM – 6:00 PM daily.</div>
+                            </div>
+                            <div class="col-12 d-none" id="slotArea">
+                                <div class="form-hint mb-2">Available times for this veterinarian</div>
+                                <div id="slotGrid" class="d-flex flex-wrap gap-2"></div>
+                                <p id="slotMsg" class="page-note mt-2 mb-0 d-none"></p>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-vc">Notes / concerns</label>
+                                <textarea name="notes" class="form-control-vc" placeholder="Anything the groomer or dentist should know (coat condition, anxiety, sensitivities)..."></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4 flex-wrap">
+                            <button type="submit" class="btn-vc">Redeem points &amp; book</button>
+                            <a class="btn-vc-outline" asp-controller="Crm" asp-action="My">Cancel</a>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/slot-picker.js" asp-append-version="true"></script>
