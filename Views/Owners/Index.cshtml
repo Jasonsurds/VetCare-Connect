@@ -1,6 +1,7 @@
 @model IEnumerable<VetCare.Controllers.OwnerListItem>
 @{
     Layout = "_DashboardLayout";
+    var canManage = User.GetUserRole() == "Administrator";
 }
 
 <div class="filter-row">
@@ -15,7 +16,10 @@
             <a class="btn-vc-outline" asp-action="Index">Clear</a>
         }
     </form>
-    <a class="btn-vc ms-auto" asp-action="Create">+ Register owner</a>
+    @if (canManage)
+    {
+        <a class="btn-vc ms-auto" asp-action="Create">+ Register owner</a>
+    }
 </div>
 
 <div class="vc-card">
@@ -47,7 +51,10 @@
                         <td><partial name="_StatusBadge" model='@(o.IsActive ? "Active" : "Inactive")' /></td>
                         <td style="text-align:right; white-space:nowrap;">
                             <a class="btn-vc-outline btn-vc-sm" asp-action="Details" asp-route-id="@o.UserID">View</a>
-                            <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@o.UserID">Edit</a>
+                            @if (canManage)
+                            {
+                                <a class="btn-vc-outline btn-vc-sm" asp-action="Edit" asp-route-id="@o.UserID">Edit</a>
+                            }
                         </td>
                     </tr>
                 }

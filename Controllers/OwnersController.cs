@@ -70,6 +70,7 @@ public class OwnersController : Controller
         return View(owner);
     }
 
+    [Authorize(Roles = "Administrator")]
     public IActionResult Create()
     {
         ViewData["DashTitle"] = "Register Pet Owner";
@@ -78,6 +79,7 @@ public class OwnersController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> Create(string name, string userName, string password, string? email, string? contactNumber, string? address)
     {
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password))
@@ -110,6 +112,7 @@ public class OwnersController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -121,6 +124,7 @@ public class OwnersController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> Edit(int id, string name, string? email, string? contactNumber, string? address, bool isActive, string? newPassword)
     {
         var owner = await _db.Users.FirstOrDefaultAsync(u => u.UserID == id && u.Role == "Pet Owner");

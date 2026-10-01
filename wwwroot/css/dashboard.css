@@ -15,6 +15,11 @@
     --vc-mint-hover: #1b8a74;
     --vc-soft: #e0f4ef;
     --vc-dark: #084338;
+    --vc-teal-deep: #063730;
+    --vc-teal-glow: rgba(35, 158, 133, 0.35);
+    --vc-risk-bg: #fee2e2;
+    --vc-risk-border: #fca5a5;
+    --vc-risk-text: #b91c1c;
     
     --text-primary: #0d2822;
     --text-secondary: #4a635d;
@@ -618,10 +623,11 @@
 }
 
 .btn-vc:hover {
-    background: var(--vc-mint-hover);
+    background: var(--vc-teal-deep);
     color: #fff !important;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(35, 158, 133, 0.35);
+    box-shadow: 0 6px 16px var(--vc-teal-glow);
+    transition: all 0.18s ease;
 }
 
 .btn-vc-outline {
@@ -644,6 +650,7 @@
     background: var(--vc-soft);
     border-color: var(--vc-mint);
     color: var(--vc-teal) !important;
+    transition: all 0.18s ease;
 }
 
 .btn-vc-outline.active,
@@ -661,7 +668,12 @@
     border-radius: var(--radius-pill);
 }
 
-.btn-vc-danger:hover { background: #fef2f2; border-color: #fca5a5; }
+.btn-vc-danger:hover {
+    background: var(--vc-risk-bg);
+    border-color: var(--vc-risk-border);
+    color: var(--vc-risk-text) !important;
+    transition: all 0.18s ease;
+}
 .btn-vc-sm { padding: 5px 14px; font-size: 0.76rem; }
 
 /* ===== Forms ===== */
@@ -917,10 +929,11 @@ textarea.form-control-vc { height: auto; min-height: 90px; resize: vertical; }
 }
 
 .btn-notif-bell:hover {
-    background: #063730;
-    border-color: #063730;
+    background: var(--vc-teal-deep);
+    border-color: var(--vc-teal-deep);
     color: #ffffff;
     transform: translateY(-1px);
+    transition: all 0.18s ease;
 }
 
 .notif-badge-pill {

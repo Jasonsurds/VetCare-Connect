@@ -3,6 +3,7 @@
     Layout = "_DashboardLayout";
     var totalPoints = Model.CrmRecords.Sum(c => c.LoyaltyPoints);
     var unpaid = Model.Invoices.Where(b => b.PaymentStatus == "Pending").Sum(b => b.TotalAmount);
+    var canManage = User.GetUserRole() == "Administrator";
 }
 
 <div class="row g-4">
@@ -19,7 +20,10 @@
                     <p class="mb-2"><span class="cell-strong">Address:</span> @(Model.Address ?? "—")</p>
                     <p class="mb-0"><span class="cell-strong">Member since:</span> @Model.CreatedDate.ToString("MMM dd, yyyy")</p>
                 </div>
-                <a class="btn-vc-outline mt-3" asp-action="Edit" asp-route-id="@Model.UserID">Edit profile</a>
+                @if (canManage)
+                {
+                    <a class="btn-vc-outline mt-3" asp-action="Edit" asp-route-id="@Model.UserID">Edit profile</a>
+                }
             </div>
         </div>
     </div>

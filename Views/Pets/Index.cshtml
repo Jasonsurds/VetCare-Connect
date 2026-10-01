@@ -2,7 +2,8 @@
 @{
     Layout = "_DashboardLayout";
     var isOwner = User.GetUserRole() == "Pet Owner";
-    var canManage = User.GetUserRole() is "Administrator" or "Clinic Staff";
+    var canManage = User.GetUserRole() == "Administrator";
+    var canAdd = canManage || isOwner;
 }
 
 <div class="filter-row">
@@ -17,7 +18,7 @@
             <a class="btn-vc-outline" asp-action="Index">Clear</a>
         }
     </form>
-    @if (canManage || isOwner)
+    @if (canAdd)
     {
         <a class="btn-vc ms-auto" asp-action="Create">+ Add pet</a>
     }

@@ -72,7 +72,7 @@ public class PetsController : Controller
         return View(pet);
     }
 
-    [Authorize(Roles = "Administrator, Clinic Staff, Pet Owner")]
+    [Authorize(Roles = "Administrator, Pet Owner")]
     public async Task<IActionResult> Create()
     {
         await PopulateOwnerDropdownAsync();
@@ -81,7 +81,7 @@ public class PetsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Administrator, Clinic Staff, Pet Owner")]
+    [Authorize(Roles = "Administrator, Pet Owner")]
     public async Task<IActionResult> Create(Pet pet)
     {
         if (User.GetUserRole() == "Pet Owner")
@@ -103,7 +103,7 @@ public class PetsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Administrator, Clinic Staff")]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -116,7 +116,7 @@ public class PetsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Administrator, Clinic Staff")]
+    [Authorize(Roles = "Administrator")]
     public async Task<IActionResult> Edit(int id, Pet pet)
     {
         if (id != pet.PetID) return NotFound();
@@ -135,7 +135,7 @@ public class PetsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Administrator, Clinic Staff, Pet Owner")]
+    [Authorize(Roles = "Administrator, Pet Owner")]
     public async Task<IActionResult> Delete(int id)
     {
         var pet = await _db.Pets

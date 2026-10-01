@@ -1,7 +1,7 @@
 @model VetCare.Models.Pet
 @{
     Layout = "_DashboardLayout";
-    var canManage = User.GetUserRole() is "Administrator" or "Clinic Staff";
+    var canManage = User.GetUserRole() == "Administrator";
     var canBook = User.GetUserRole() == "Pet Owner";
     var today = DateTime.Today;
 }

@@ -127,6 +127,10 @@
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                     Medicine Inventory
                 </a>
+                <a class="side-link @(currentController == "Billing" ? "active" : "")" asp-controller="Billing" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    Billing
+                </a>
             }
             else if (role == "Clinic Staff")
             {
@@ -179,6 +183,10 @@
                 <a class="side-link @(currentController == "PurchaseRequests" ? "active" : "")" asp-controller="PurchaseRequests" asp-action="Index">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2"></path><path d="M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"></path><path d="M3 8h18"></path><path d="M9 12h6"></path></svg>
                     Restock Requests
+                </a>
+                <a class="side-link @(currentController == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Reports
                 </a>
             }
             else if (role == "Pet Owner")
@@ -246,7 +254,7 @@
         </nav>
 
         <div class="side-footer">
-            @if (role == "Pet Owner")
+            @if (role == "Pet Owner" || role == "Veterinarian")
             {
                 <a class="side-user side-user-link" asp-controller="Account" asp-action="ManageProfile" title="Manage profile">
                     <div class="side-avatar">@initials</div>
