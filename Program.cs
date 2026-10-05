@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VetCare.Data;
@@ -99,12 +100,37 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
 
 builder.Services.AddAuthorization();
 
+// The shared host terminates TLS in front of Kestrel, so the request scheme arrives as
+// plain HTTP unless the forwarded headers are honoured. Without this, UseHttpsRedirection
+// would bounce already-HTTPS requests back to HTTPS forever.
+// KnownIPNetworks/KnownProxies are cleared because the proxy address is not ours to know.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+// Must run before UseHsts/UseHttpsRedirection so they observe the forwarded scheme.
+app.UseForwardedHeaders();
 
 // Create the database (if missing) and seed demo data on first run.
 using (var scope = app.Services.CreateScope())
 {
-    DbInitializer.Initialize(scope.ServiceProvider);
+    try
+    {
+        DbInitializer.Initialize(scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogCritical(ex,
+            "Database initialization failed. Usually either the SQL Server login lacks permission "
+            + "to create tables, or the connection string is wrong/unreachable. "
+            + "Check ConnectionStrings__VetCareDb and that the login may run CREATE TABLE.");
+        throw;
+    }
 }
 
 // Configure the HTTP request pipeline.
