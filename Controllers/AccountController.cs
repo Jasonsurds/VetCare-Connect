@@ -17,12 +17,14 @@ namespace VetCare.Controllers
     {
         private readonly VetCareDbContext _db;
         private readonly IAuditService _audit;
+        private readonly INotificationService _notif;
         private readonly PasswordHasher<User> _hasher = new();
 
-        public AccountController(VetCareDbContext db, IAuditService audit)
+        public AccountController(VetCareDbContext db, IAuditService audit, INotificationService notif)
         {
             _db = db;
             _audit = audit;
+            _notif = notif;
         }
 
         [HttpGet]
@@ -95,6 +97,87 @@ namespace VetCare.Controllers
                 return Redirect(returnUrl);
 
             return RedirectToAction("Index", "Dashboard");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Register(string? returnUrl = null)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Index", "Dashboard");
+
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(string name, string userName, string password, string confirmPassword, string? email, string? contactNumber, string? address, string? returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+
+            var fullName = (name ?? string.Empty).Trim();
+            var username = (userName ?? string.Empty).Trim();
+            var mail = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError(string.Empty, "Name, username and password are required.");
+                return View();
+            }
+
+            if (password.Length < 6)
+            {
+                ModelState.AddModelError(string.Empty, "Password must be at least 6 characters long.");
+                return View();
+            }
+
+            if (password != confirmPassword)
+            {
+                ModelState.AddModelError(string.Empty, "The passwords you entered do not match.");
+                return View();
+            }
+
+            if (await _db.Users.AnyAsync(u => u.UserName == username))
+            {
+                ModelState.AddModelError(string.Empty, $"Username '{username}' is already taken.");
+                return View();
+            }
+
+            // Sign-in accepts either username or email, so a duplicate email would make
+            // the account ambiguous to log into.
+            if (mail != null && await _db.Users.AnyAsync(u => u.Email == mail))
+            {
+                ModelState.AddModelError(string.Empty, "An account already exists with that email address.");
+                return View();
+            }
+
+            var owner = new User
+            {
+                // Hardcoded on purpose — self-registration must never grant staff or admin roles.
+                Role = "Pet Owner",
+                Name = fullName,
+                UserName = username,
+                Email = mail,
+                ContactNumber = string.IsNullOrWhiteSpace(contactNumber) ? null : contactNumber.Trim(),
+                Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim(),
+                IsActive = true
+            };
+            owner.Password = _hasher.HashPassword(owner, password);
+
+            _db.Users.Add(owner);
+            await _db.SaveChangesAsync();
+            await _audit.LogAsync("Create", "Users", $"Self-registered pet owner '{fullName}' (ID {owner.UserID}).");
+
+            // Let the clinic know a new public account now exists so they can review/deactivate it if needed.
+            var contactHint = string.IsNullOrWhiteSpace(mail) ? owner.UserName : mail;
+            await _notif.SendToRoleAsync("Administrator", "New Pet Owner Registered",
+                $"'{fullName}' (username: {owner.UserName}, contact: {contactHint}) created a public pet owner account and can now sign in.",
+                "System", $"/Users/Edit/{owner.UserID}");
+
+            TempData["SuccessMessage"] = $"Account created for {fullName}. Please sign in to continue.";
+            return RedirectToAction(nameof(Login), new { returnUrl });
         }
 
         [HttpGet]

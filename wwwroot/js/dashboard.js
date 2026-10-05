@@ -182,6 +182,7 @@ function getCategoryIcon(cat) {
         case 'Appointment': return '📅';
         case 'Billing': return '💳';
         case 'Reminder': return '💉';
+        case 'System': return '⚙️';
         default: return '🔔';
     }
 }
