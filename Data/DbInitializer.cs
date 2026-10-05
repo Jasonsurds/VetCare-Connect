@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VetCare.Models;
@@ -10,6 +11,8 @@ public static class DbInitializer
 
     public static void Initialize(IServiceProvider services)
     {
+        var configuration = services.GetRequiredService<IConfiguration>();
+
         using var context = new VetCareDbContext(
             services.GetRequiredService<DbContextOptions<VetCareDbContext>>());
         context.Database.EnsureCreated();
@@ -96,12 +99,12 @@ public static class DbInitializer
         }
         catch { /* ignore if already created or managed by EF */ }
 
-        Seed(context);
+        Seed(context, configuration);
         SeedNotifications(context);
         SeedInventory(context);
     }
 
-    private static void Seed(VetCareDbContext context)
+    private static void Seed(VetCareDbContext context, IConfiguration configuration)
     {
         if (context.Users.Any()) return;
 
@@ -109,11 +112,11 @@ public static class DbInitializer
         // treatments, inventory, billing, reminders, CRM, suppliers, reports) start
         // empty — data is entered through the system itself.
         context.Users.AddRange(
-            NewUser("Administrator", "Dr. Amelia Cruz", "admin", "^n@v62XWr8GvLC", "admin@vetcare.com"),
-            NewUser("Veterinarian", "Dr. Sarah Chen", "vet", "LrWPmC7mVh^Z9f", "vet@vetcare.com", "0917-100-2000"),
-            NewUser("Clinic Staff", "Grace Lim", "staff", "NayJT^JyAQkQ6h", "staff@vetcare.com", "0917-100-3000"),
-            NewUser("Pet Owner", "Jason Surdilla", "owner", "9ne$t8VfeyJF#q", "owner@vetcare.com", "0917-100-4000", "123 Mabini St., Quezon City"),
-            NewUser("Supplier", "VetSupply Co.", "supplier", "^p*2FZBwggLLs@", "supplier@vetcare.com"));
+            NewUser("Administrator", "Dr. Amelia Cruz", "admin", ResolvePassword(configuration, "Administrator"), "admin@vetcare.com"),
+            NewUser("Veterinarian", "Dr. Sarah Chen", "vet", ResolvePassword(configuration, "Veterinarian"), "vet@vetcare.com", "0917-100-2000"),
+            NewUser("Clinic Staff", "Grace Lim", "staff", ResolvePassword(configuration, "ClinicStaff"), "staff@vetcare.com", "0917-100-3000"),
+            NewUser("Pet Owner", "Jason Surdilla", "owner", ResolvePassword(configuration, "PetOwner"), "owner@vetcare.com", "0917-100-4000", "123 Mabini St., Quezon City"),
+            NewUser("Supplier", "VetSupply Co.", "supplier", ResolvePassword(configuration, "Supplier"), "supplier@vetcare.com"));
 
         context.SaveChanges();
 
@@ -275,5 +278,29 @@ public static class DbInitializer
         };
         user.Password = Hasher.HashPassword(user, password);
         return user;
+    }
+
+    /// <summary>
+    /// Resolves a demo account password from configuration (e.g. "Seed:Administrator:Password",
+    /// supplied via user-secrets, an environment variable, or the hosting control panel).
+    /// When nothing is configured a strong random password is generated and logged once,
+    /// so no credential ever has to be committed to source control.
+    /// </summary>
+    private static string ResolvePassword(IConfiguration configuration, string accountKey)
+    {
+        var configured = configuration[$"Seed:{accountKey}:Password"];
+        if (!string.IsNullOrWhiteSpace(configured))
+            return configured.Trim();
+
+        var generated = GeneratePassword();
+        Console.WriteLine($"[DbInitializer] No 'Seed:{accountKey}:Password' configured — generated demo password: {generated}");
+        return generated;
+    }
+
+    private static string GeneratePassword()
+    {
+        // Ambiguous characters (0/O, 1/l/I) omitted so passwords stay easy to retype.
+        const string alphabet = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+        return RandomNumberGenerator.GetString(alphabet, 16);
     }
 }

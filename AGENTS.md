@@ -22,13 +22,19 @@ dotnet run
 
 ## Seeded demo accounts
 
-| Role          | Username   | Password     |
-|---------------|------------|--------------|
-| Administrator | `admin`  | `^n@v62XWr8GvLC` |
-| Veterinarian  | `vet`    | `LrWPmC7mVh^Z9f` |
-| Clinic Staff  | `staff`  | `NayJT^JyAQkQ6h` |
-| Pet Owner     | `owner`  | `9ne$t8VfeyJF#q` |
-| Supplier      | `supplier` | `^p*2FZBwggLLs@` |
+| Role          | Username   | Password                     |
+|---------------|------------|------------------------------|
+| Administrator | `admin`  | from `Seed:Administrator:Password` |
+| Veterinarian  | `vet`    | from `Seed:Veterinarian:Password`  |
+| Clinic Staff  | `staff`  | from `Seed:ClinicStaff:Password`   |
+| Pet Owner     | `owner`  | from `Seed:PetOwner:Password`      |
+| Supplier      | `supplier` | from `Seed:Supplier:Password`     |
+
+Passwords are never committed. Read them from user-secrets (`dotnet user-secrets set
+"Seed:Administrator:Password" "..."`) or `Seed__Administrator__Password` environment
+variables on a host. When neither is set, `DbInitializer` generates a strong random
+password per account and logs it once on first run. Seeding only happens when the
+`Users` table is empty, so setting these later never affects an existing database.
 
 ## Project layout
 

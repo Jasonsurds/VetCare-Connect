@@ -18,14 +18,22 @@ namespace VetCare.Controllers
         private readonly VetCareDbContext _db;
         private readonly IAuditService _audit;
         private readonly INotificationService _notif;
+        private readonly IConfiguration _config;
         private readonly PasswordHasher<User> _hasher = new();
 
-        public AccountController(VetCareDbContext db, IAuditService audit, INotificationService notif)
+        public AccountController(VetCareDbContext db, IAuditService audit, INotificationService notif, IConfiguration config)
         {
             _db = db;
             _audit = audit;
             _notif = notif;
+            _config = config;
         }
+
+        // Google sign-in is only wired up when both credentials are supplied (see Program.cs),
+        // so the UI hides the button instead of offering a link that would throw.
+        private bool GoogleEnabled =>
+            !string.IsNullOrWhiteSpace(_config["Authentication:Google:ClientId"]) &&
+            !string.IsNullOrWhiteSpace(_config["Authentication:Google:ClientSecret"]);
 
         [HttpGet]
         public async Task<IActionResult> Login(string? returnUrl = null)
@@ -34,6 +42,7 @@ namespace VetCare.Controllers
                 return RedirectToAction("Index", "Dashboard");
 
             ViewData["ReturnUrl"] = returnUrl;
+            ViewData["GoogleEnabled"] = GoogleEnabled;
             return View();
         }
 
@@ -42,6 +51,7 @@ namespace VetCare.Controllers
         public async Task<IActionResult> Login(string email, string password, bool rememberMe, string? role, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
+            ViewData["GoogleEnabled"] = GoogleEnabled;
 
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
@@ -183,6 +193,12 @@ namespace VetCare.Controllers
         [HttpGet]
         public IActionResult GoogleLogin()
         {
+            if (!GoogleEnabled)
+            {
+                TempData["ErrorMessage"] = "Google sign-in is not configured on this server.";
+                return RedirectToAction(nameof(Login));
+            }
+
             var properties = new AuthenticationProperties { RedirectUri = "/" };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }

@@ -32,13 +32,30 @@ Then open **http://localhost:5194**
 
 ## Demo accounts
 
+Seeded on first run only, and **only when the database is empty**.
+
 | Role | Username | Password |
 |------|----------|----------|
-| Administrator | `admin`  | `^n@v62XWr8GvLC` |
-| Veterinarian | `vet` | `LrWPmC7mVh^Z9f` |
-| Clinic Staff | `staff` | `NayJT^JyAQkQ6h` |
-| Pet Owner | `owner` | `9ne$t8VfeyJF#q` |
-| Supplier | `supplier` | `^p*2FZBwggLLs@` |
+| Administrator | `admin`  | see below |
+| Veterinarian | `vet` | see below |
+| Clinic Staff | `staff` | see below |
+| Pet Owner | `owner` | see below |
+| Supplier | `supplier` | see below |
+
+Passwords are **never stored in source control**. Supply them with user-secrets or
+environment variables, otherwise a strong random one is generated per account and
+printed to the console on first run:
+
+```bash
+dotnet user-secrets set "Seed:Administrator:Password" "<your-password>"
+dotnet user-secrets set "Seed:Veterinarian:Password" "<your-password>"
+dotnet user-secrets set "Seed:ClinicStaff:Password"  "<your-password>"
+dotnet user-secrets set "Seed:PetOwner:Password"     "<your-password>"
+dotnet user-secrets set "Seed:Supplier:Password"     "<your-password>"
+```
+
+On a hosting provider set the matching `Seed__Administrator__Password` style
+environment variables instead. The seeded login names and e-mail addresses stay fixed.
 
 ## Project structure
 

@@ -110,11 +110,15 @@ Create `Data/DbSeeder.cs`, called on startup, inserting the exact accounts the d
 
 | Role | Username | Password |
 |------|----------|----------|
-| Administrator | `admin`  | `^n@v62XWr8GvLC` |
-| Veterinarian | `vet` | `LrWPmC7mVh^Z9f` |
-| Clinic Staff | `staff` | `NayJT^JyAQkQ6h` |
-| Pet Owner | `owner` | `9ne$t8VfeyJF#q` |
-| Supplier | `supplier` | `^p*2FZBwggLLs@` |
+| Administrator | `admin`  | from `Seed:Administrator:Password` |
+| Veterinarian | `vet` | from `Seed:Veterinarian:Password` |
+| Clinic Staff | `staff` | from `Seed:ClinicStaff:Password` |
+| Pet Owner | `owner` | from `Seed:PetOwner:Password` |
+| Supplier | `supplier` | from `Seed:Supplier:Password` |
+
+Passwords are read from configuration (user-secrets or `Seed__*` environment variables)
+so no credential is committed to source control. When none is configured, a strong random
+password is generated per account and logged once on first run.
 
 (Hash passwords with BCrypt at seed time.) Also seed demo rows so screens aren't empty for screenshots: 1–2 vets, 3 owners, 5 pets, appointments across statuses, 8–10 inventory items (some below reorder level), invoices (paid + pending), reminders (due soon), CRM entries, 2 suppliers.
 
